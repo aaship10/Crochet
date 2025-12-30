@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom';
-import { useState }  from 'react';
+import { Link, useLocation } from 'react-router-dom';
 function Header() {
 
-    const [activeLink, setActiveLink] = useState('/home');
+    const location = useLocation();
+
+    const isActive = (path) => location.pathname === path;
 
     const links = [
         { name: 'Home', path: '/home' },
@@ -24,8 +25,7 @@ function Header() {
                         <Link 
                             key={link.path}
                             to={link.path}
-                            className={`mx-2 px-4 ${activeLink === link.path ? 'font-extrabold text-purple-900' : 'font-medium text-purple-700'}`}
-                            onClick={() => setActiveLink(link.path)}
+                            className={`mx-2 px-4 ${isActive(link.path) ? 'font-extrabold text-purple-900' : 'font-medium text-purple-700'}`}
                         >
                             {link.name}
                         </Link>
@@ -38,8 +38,7 @@ function Header() {
                         <Link
                             key={link.path}
                             to={link.path}
-                            className={`mx-2 px-4 ${activeLink === link.path ? 'font-bold text-purple-900' : 'font-medium text-purple-700'}`}
-                            onClick={() => setActiveLink(link.path)}
+                            className={`mx-2 px-4 ${isActive(link.path) ? 'font-bold text-purple-900' : 'font-medium text-purple-700'}`}
                         >
                             {link.name}
                         </Link>

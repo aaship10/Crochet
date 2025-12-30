@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ColourModal from "./colourSelection";
-
+import ProductCarousel from "./carouselPhotos";
 function Card() {
   const [selectedColour, setSelectedColour] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -8,7 +8,9 @@ function Card() {
   return (
     <div className="bg-white rounded-lg shadow-md p-4 w-60 hover:-translate-y-2 transition-transform">
       
-      <div className="h-40 bg-gray-200 rounded-md mb-4"></div>
+      <div className="h-40 w-full mb-4 relative rounded-md">
+         <ProductCarousel />
+      </div>
 
       <h2 className="text-lg font-bold mb-2">Product Name</h2>
       <p className="text-gray-600 mb-3">$29.99</p>

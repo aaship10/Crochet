@@ -18,7 +18,7 @@ function Header() {
     ];
 
     return (
-        <header className="flex flex-row justify-between items-center bg-purple-200 p-4 sticky top-0 z-10 left-0 right-0">
+        <header className="flex flex-row justify-between items-center bg-purple-200 p-4 sticky top-0 z-10 left-0 right-0 opacity-80">
             <div className="flex flex-row justify-center items-center">
                 {
                     links.map(link => (

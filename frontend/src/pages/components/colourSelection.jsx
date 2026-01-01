@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom"; 
-import img1 from "../../../public/p1-1.jpeg";
+import img1 from "/p1-1.jpeg";
 
 function Colour({ onClose, onSelect }) {
     const colours = [

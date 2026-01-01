@@ -34,7 +34,7 @@ function Home() {
             </div>
           </div> 
 
-          <div className='flex flex-col justify-center items-center w-screen p-5'>
+          <div className='flex flex-col justify-center items-center w-screen p-5 bg-slate-300'>
             <p className='text-3xl font-extrabold mb-6'>
               What Our Customers Say
             </p>

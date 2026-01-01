@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import img1 from '../../../public/p1-1.jpeg';
-import img2 from '../../../public/p1-2.jpeg';
-import img3 from '../../../public/p1-3.jpeg';
-import img4 from '../../../public/p1-4.jpeg';
+import img1 from '/p1-1.jpeg';
+import img2 from '/p1-2.jpeg';
+import img3 from '/p1-3.jpeg';
+import img4 from '/p1-4.jpeg';
 
 const slides = [
   { url: img1 }, 

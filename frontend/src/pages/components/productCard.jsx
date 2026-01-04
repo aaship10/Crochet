@@ -1,10 +1,10 @@
 import { useState } from "react";
 import ColourModal from "./colourSelection";
 import ProductCarousel from "./carouselPhotos";
-function Card() {
+function Card({ onAddToCart }) {
   const [selectedColour, setSelectedColour] = useState(null);
   const [showModal, setShowModal] = useState(false);
-
+  // const {name, price, colour} = product;
   return (
     <div className="bg-white rounded-lg shadow-md p-4 w-60 hover:-translate-y-2 transition-transform">
       
@@ -23,17 +23,10 @@ function Card() {
         {selectedColour ? `Colour: ${selectedColour.name}` : "Choose Colour"}
       </button>
 
-      {/* Small selected colour text */}
-      {/* {selectedColour && (
-        <p className="text-normal text-gray-600 mb-2">
-          Selected colour:{" "}
-          <span className="font-semibold">{selectedColour.name}</span>
-        </p>
-      )} */}
-
       {/* Add to Cart */}
       <button
         disabled={!selectedColour}
+        onClick={onAddToCart}
         className={`w-full py-2 rounded-md text-white transition
           ${
             selectedColour

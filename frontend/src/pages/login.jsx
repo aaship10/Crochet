@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from './components/header';
 import Footer from './components/footer';
+import { useAuth } from './useAuth'
 
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(false);
@@ -12,6 +12,7 @@ function AuthPage() {
     confirmPassword: ''
   });
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -48,7 +49,7 @@ function AuthPage() {
       const data = await response.json();
       if(response.ok){
         if(isLogin) {
-            localStorage.setItem('token', data.token);
+            login(data.token);
             navigate('/product'); 
         } else {
             alert('Registration Successful! Please login.');
@@ -66,7 +67,6 @@ function AuthPage() {
   
   return (
     <div className='flex flex-col min-h-screen'>
-      <Header />
       <main className='flex-grow flex flex-col justify-center items-center'>
         
         <div className='bg-fuchsia-200 flex flex-row rounded-xl overflow-hidden shadow-2xl max-w-5xl w-full m-10'>

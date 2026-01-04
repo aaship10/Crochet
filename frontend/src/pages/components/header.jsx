@@ -1,24 +1,10 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import  { useAuth } from '../useAuth';
 
 function Header() {
     const location = useLocation();
     const navigate = useNavigate();
-    const [loggedIn, setLoggedIn] = useState(() => {
-        return localStorage.getItem('loggedIn') === 'true';
-    });
-
-    useEffect(() => {
-        const handleStorageChange = () => {
-            setLoggedIn(localStorage.getItem('loggedIn') === 'true');
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-        };
-    }, []);
+    const { user: loggedIn, logout } = useAuth();
 
     const isActive = (path) => location.pathname === path;
 
@@ -29,19 +15,16 @@ function Header() {
         { name: 'FAQ', path: '/faq' },
     ];
 
-    // Removed 'Logout' from here, handled by the button below
     const authLinks = loggedIn ? [
         { name: 'Cart', path: '/cart' },
         // { name: 'Profile', path: '/profile' },
         // { name: 'Orders', path: '/orders' },
     ] : [
-        // Points to /login, which now handles both Login & Signup
         { name: 'Login / Register', path: '/login' }, 
     ];
 
     const handleLogout = () => {
-        localStorage.removeItem('loggedIn'); 
-        setLoggedIn(false); 
+        logout(); 
         navigate('/');
     };
 

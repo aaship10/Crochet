@@ -1,11 +1,9 @@
-import Header from './components/header';
 import Footer from './components/footer';
 import img1 from '/p1-1.jpeg';
 
 function About() {
   return (
     <div className='flex flex-col min-h-screen'>
-      <Header />
       <main className='flex-grow'>
         <div className='flex flex-col justify-center items-center p-8 gap-8'>
           <h1 className='text-5xl font-extrabold'>About Us</h1>

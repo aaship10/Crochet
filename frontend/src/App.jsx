@@ -7,9 +7,13 @@ import About from './pages/about'
 import Faq from './pages/faq'
 import Login from './pages/login'
 import Cart from './pages/cart'
+import Header from './pages/components/header'
+import  { AuthProvider } from './pages/AuthProvider'
+
 function App() {
   return (
-    <BrowserRouter>
+    <AuthProvider>
+      <Header  />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/product" element={<Product />} />
@@ -18,7 +22,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/cart" element={<Cart />} />
       </Routes>
-    </BrowserRouter>
+    </AuthProvider>
   )
 }
 

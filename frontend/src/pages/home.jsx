@@ -1,4 +1,3 @@
-import Header from './components/header';
 import Footer from './components/footer';
 import ProductCard from './components/productCard';
 import img1 from '/p2-1.jpeg';
@@ -6,7 +5,6 @@ import {Link} from 'react-router-dom';
 function Home() {
   return (
     <div className='flex flex-col min-h-screen'>
-      <Header />
       <main className='flex-grow'>
         <div className='flex flex-row flex-wrap justify-center items-center p-4'>
           <div className='w-screen bg-indigo-100 flex justify-between items-left rounded-lg shadow-md font-extrabold p-8 flex-row'>

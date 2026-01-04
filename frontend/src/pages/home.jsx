@@ -1,7 +1,7 @@
 import Header from './components/header';
 import Footer from './components/footer';
 import ProductCard from './components/productCard';
-import img1 from '../../public/p2-1.jpeg';
+import img1 from '/p2-1.jpeg';
 import {Link} from 'react-router-dom';
 function Home() {
   return (

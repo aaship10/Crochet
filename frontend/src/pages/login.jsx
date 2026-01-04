@@ -4,26 +4,73 @@ import Header from './components/header';
 import Footer from './components/footer';
 
 function AuthPage() {
-  // State to toggle between Login and Signup views
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // In a real app you'd authenticate with a server; here we set a simple flag
-    localStorage.setItem('loggedIn', 'true');
-    navigate('/');
-  }; 
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
+  const handleSubmit = async(e) => {
+    e.preventDefault();
+
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    const endpoint = isLogin ? '/auth/login' : '/auth/register';
+
+    try{
+      const payload = isLogin ? {
+              email: formData.email,
+              password: formData.password
+          } : {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password
+          };
+      const response = await fetch(`http://localhost:5000${endpoint}`, 
+        {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify( payload ),
+      });
+
+      const data = await response.json();
+      if(response.ok){
+        if(isLogin) {
+            localStorage.setItem('token', data.token);
+            navigate('/product'); 
+        } else {
+            alert('Registration Successful! Please login.');
+            setIsLogin(true);
+        }
+      }
+      else{
+        alert(data.error || data.message || 'Something went wrong');
+      }
+    }
+    catch(err){
+      console.error('Error:', err);
+    }
+  };
+  
   return (
     <div className='flex flex-col min-h-screen'>
       <Header />
       <main className='flex-grow flex flex-col justify-center items-center'>
         
-        {/* Main Container */}
         <div className='bg-fuchsia-200 flex flex-row rounded-xl overflow-hidden shadow-2xl max-w-5xl w-full m-10'>
           
-          {/* LEFT SIDE: Informational / Toggle Text */}
           <div className='p-10 w-1/2 flex justify-center items-center flex-col gap-6 text-center'>
             <p className='text-6xl font-extrabold text-white drop-shadow-md'>
               {isLogin ? 'Welcome Back!' : 'Join Us Today!'}
@@ -44,7 +91,6 @@ function AuthPage() {
             </span>
           </div>
 
-          {/* RIGHT SIDE: Form Area */}
           <div className='bg-indigo-300 w-1/2 flex flex-col justify-center items-center gap-6 p-10'>
             <h1 className='text-4xl font-extrabold text-white'>
               {isLogin ? 'Login to Account' : 'Create Account'}
@@ -52,32 +98,46 @@ function AuthPage() {
             
             <form onSubmit={handleSubmit} className='flex flex-col gap-4 w-full px-8'>
               
-              {/* Extra Field for Signup: Full Name */}
               {!isLogin && (
                 <input 
+                  name='name'
+                  value={formData.name}
+                  onChange={handleChange}
                   type='text' 
                   placeholder='Full Name'
                   className='p-3 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all'
+                  required
                 />
               )}
 
               <input 
+                name='email'
+                value={formData.email}
+                onChange={handleChange}
                 type='email' 
                 placeholder='Email'
                 className='p-3 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all'
+                required
               />
               <input
+                name='password'
+                value={formData.password}
+                onChange={handleChange}
                 type='password'
                 placeholder='Password'
                 className='p-3 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all'
+                required
               />
 
-              {/* Extra Field for Signup: Confirm Password */}
               {!isLogin && (
                  <input
+                 name='confirmPassword'
+                 value={formData.confirmPassword}
+                 onChange={handleChange}
                  type='password'
                  placeholder='Confirm Password'
                  className='p-3 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all'
+                 required
                />
               )}
 

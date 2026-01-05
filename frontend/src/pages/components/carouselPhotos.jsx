@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import img1 from '/p1-1.jpeg';
 import img2 from '/p1-2.jpeg';
 import img3 from '/p1-3.jpeg';
 import img4 from '/p1-4.jpeg';
 
-const slides = [
-  { url: img1 }, 
-  { url: img2 }, 
-  { url: img3 }, 
-  { url: img4 }, 
-];
-
-const ProductCarousel = () => {
+const ProductCarousel = ({product}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const slides = [
+    { url: product.image_url }, 
+    { url: img2 }, 
+    { url: img3 }, 
+    { url: img4 }, 
+  ];
 
   const nextSlide = () => {
     setCurrentIndex((prevIndex) => (prevIndex === slides.length - 1 ? 0 : prevIndex + 1));

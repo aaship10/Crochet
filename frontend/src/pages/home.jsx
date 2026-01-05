@@ -1,8 +1,49 @@
+import { useState, useEffect } from 'react';
 import Footer from './components/footer';
 import ProductCard from './components/productCard';
 import img1 from '/p2-1.jpeg';
 import {Link} from 'react-router-dom';
 function Home() {
+
+  const[products, setProducts] = useState([]);
+  const [selectedColour, setSelectedColour] = useState(null);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/products');
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };  
+    fetchProducts();
+  }, []);
+
+  const handleAddToCart = async(product) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          product_id: product.id,
+          name: product.name,
+          price: product.price,
+          colour: selectedColour.name
+         }),
+      });
+      if (response.ok) {
+        alert(`${product.name} added to cart!`);
+      } else {
+        alert('Failed to add item to cart.');
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    }
+  };
+
   return (
     <div className='flex flex-col min-h-screen'>
       <main className='flex-grow'>
@@ -21,9 +62,19 @@ function Home() {
             </div>
             <div className='flex flex-row flex-wrap justify-center items-center gap-24 mt-4 py-3 mb-6'>
               {/* Product Cards */}
-              <ProductCard />
-              <ProductCard />
-              <ProductCard />
+              {
+                products.length > 0 ? 
+                (products.slice(0,3).map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onAddToCart={handleAddToCart}
+                    selectedColour={selectedColour}
+                    setSelectedColour={setSelectedColour} />
+                ))) : (
+                  <p> Loading products...</p>
+                )
+              }
             </div>
             <div>
               <Link to={'/product'} className='bg-fuchsia-300 text-black px-56 py-3 rounded-full hover:bg-fuchsia-500 hover:text-white mt-6'>

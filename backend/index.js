@@ -76,29 +76,37 @@ app.post('/auth/login', async (req, res) => {
     }
 });
 
-// Example API Route: Get all products
-// app.get('/api/products', async (req, res) => {
-//   try {
-//     const result = await pool.query('SELECT * FROM products');
-//     res.json(result.rows);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).send('Server Error');
-//   }
-// });
+// app.post('/api/products', async(req, res) => {
+//     const {productId, name, price} = req.body;
+
+//     try {
+//         const 
+//     }
+// })
+
+
+app.get('/api/products', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM products');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
 
 app.post('/api/cart', async(req, res) => {
-    const { productId, name, price, colour } = req.body;
+    const { product_id, name, price, colour } = req.body;
+    console.log('product added to cart', [product_id, name, price, colour]);
 
     try {
-        const existing = await pool.query('SELECT * FROM cart WHERE (product_id = $1 AND colour = $2)', [productId, colour]);
-
+        const existing = await pool.query('SELECT * FROM cart WHERE (product_id = $1 AND colour = $2)', [product_id, colour]);
         if (existing.rows.length > 0 ) {
-            await pool.query('UPDATE cart SET quantity = quantity + 1 WHERE (product_id = $1 AND colour = $2)', [productId, colour])
+            await pool.query('UPDATE cart SET quantity = quantity + 1 WHERE (product_id = $1 AND colour = $2)', [product_id, colour])
         } else {
-            await pool.query('INSERT INTO cart (product_id, product_name, price, colour) VALUES  ($1, $2, $3, $4)', [productId, name, price, colour]);
+            await pool.query('INSERT INTO cart (product_id, product_name, price, colour) VALUES  ($1, $2, $3, $4)', [product_id, name, price, colour]);
         }
-
+        console.log('product added to cart', [product_id, name, price, colour]);
         res.json({message: 'Added to cart successfully'});
     } catch(err) {
         console.error(err);

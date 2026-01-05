@@ -4,7 +4,6 @@ import Footer from './components/footer';
 function Faq() {
   return (
     <div className='flex flex-col min-h-screen'>
-      <Header />
       <main className='flex-grow'>
         <div className='flex flex-col justify-center items-center p-8 gap-8'>
           <h1 className='text-5xl font-extrabold'>Frequently Asked Questions</h1>

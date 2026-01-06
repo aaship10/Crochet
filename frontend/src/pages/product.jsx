@@ -23,12 +23,15 @@ function Product() {
     try {
       const response = await fetch('http://localhost:5000/api/cart', {
         method: 'POST',
-        headers: {'Content-Type' : 'application/json'},
+        headers: {
+          'Content-Type' : 'application/json'
+        },
         body: JSON.stringify ({
           product_id: product.id,
           name: product.name,
           price: product.price,
-          colour: selectedColour.name
+          colour: selectedColour.name,
+          image: product.image_url
         })
       });
       console.log(product.name);

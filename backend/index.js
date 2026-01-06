@@ -10,7 +10,7 @@ const SECRET_KEY = process.env.SECRET_KEY;
 const app = express();
 const port = process.env.PORT || 5000;
 
-//middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 
@@ -25,6 +25,7 @@ app.get('/', (req, res) => {
     res.send('Backend is running!');
 });
 
+// AUTH ROUTES
 app.post('/auth/register', async (req, res) => {
     const { name, email, password } = req.body;
 
@@ -76,15 +77,7 @@ app.post('/auth/login', async (req, res) => {
     }
 });
 
-// app.post('/api/products', async(req, res) => {
-//     const {productId, name, price} = req.body;
-
-//     try {
-//         const 
-//     }
-// })
-
-
+// PRODUCT ROUTES
 app.get('/api/products', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM products');
@@ -95,18 +88,21 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
+// CART ROUTES 
+
+// 1. Add to Cart
 app.post('/api/cart', async(req, res) => {
-    const { product_id, name, price, colour } = req.body;
-    console.log('product added to cart', [product_id, name, price, colour]);
+    const { product_id, name, price, colour, image } = req.body;
+    console.log('product added to cart', [product_id, name, price, colour, image]);
 
     try {
         const existing = await pool.query('SELECT * FROM cart WHERE (product_id = $1 AND colour = $2)', [product_id, colour]);
         if (existing.rows.length > 0 ) {
             await pool.query('UPDATE cart SET quantity = quantity + 1 WHERE (product_id = $1 AND colour = $2)', [product_id, colour])
         } else {
-            await pool.query('INSERT INTO cart (product_id, product_name, price, colour) VALUES  ($1, $2, $3, $4)', [product_id, name, price, colour]);
+            await pool.query('INSERT INTO cart (product_id, product_name, price, colour, image) VALUES  ($1, $2, $3, $4, $5)', [product_id, name, price, colour, image]);
         }
-        console.log('product added to cart', [product_id, name, price, colour]);
+        console.log('product added to cart', [product_id, name, price, colour, image]);
         res.json({message: 'Added to cart successfully'});
     } catch(err) {
         console.error(err);
@@ -114,12 +110,62 @@ app.post('/api/cart', async(req, res) => {
     }
 });
 
+// 2. Get Cart Items
 app.get('/api/cart', async(req, res) => {
     try {
         const result = await pool.query('SELECT * FROM cart ORDER BY id ASC');
         res.json(result.rows);
     } catch(err) {
         res.status(500).json({message: 'Database error'});
+    }
+});
+
+// 3. Update Cart Quantity (NEW)
+app.put('/api/cart/:id', async (req, res) => {
+    const { id } = req.params;
+    const { quantity } = req.body;
+
+    // Basic validation
+    if (!quantity || quantity < 1) {
+        return res.status(400).json({ error: "Quantity must be at least 1" });
+    }
+
+    try {
+        // Update the quantity where the ID matches
+        const result = await pool.query(
+            'UPDATE cart SET quantity = $1 WHERE id = $2 RETURNING *',
+            [quantity, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Item not found in cart" });
+        }
+
+        res.json({ message: "Quantity updated", item: result.rows[0] });
+    } catch (err) {
+        console.error("Error updating cart quantity:", err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+// 4. Delete Cart Item (NEW)
+app.delete('/api/cart/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            'DELETE FROM cart WHERE id = $1 RETURNING *',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Item not found in cart" });
+        }
+
+        res.json({ message: "Item removed from cart", item: result.rows[0] });
+    } catch (err) {
+        console.error("Error deleting cart item:", err);
+        res.status(500).json({ error: "Database error" });
     }
 });
 

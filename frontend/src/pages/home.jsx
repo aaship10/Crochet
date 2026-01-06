@@ -4,7 +4,6 @@ import ProductCard from './components/productCard';
 import img1 from '/p2-1.jpeg';
 import {Link} from 'react-router-dom';
 function Home() {
-
   const[products, setProducts] = useState([]);
   const [selectedColour, setSelectedColour] = useState(null);
   useEffect(() => {
@@ -31,9 +30,12 @@ function Home() {
           product_id: product.id,
           name: product.name,
           price: product.price,
-          colour: selectedColour.name
+          colour: selectedColour.name,
+          image: product.image_url
          }),
       });
+      console.log(product.name);
+      console.log(response);
       if (response.ok) {
         alert(`${product.name} added to cart!`);
       } else {
@@ -68,7 +70,7 @@ function Home() {
                   <ProductCard
                     key={product.id}
                     product={product}
-                    onAddToCart={handleAddToCart}
+                    onAddToCart={handleAddToCart(product)}
                     selectedColour={selectedColour}
                     setSelectedColour={setSelectedColour} />
                 ))) : (

@@ -4,6 +4,8 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
@@ -13,6 +15,21 @@ const port = process.env.PORT || 5000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+    if(!token)
+      return res.sendStatus(401).json({message:'Access Denied!'});
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+      if(err) 
+        return res.sendStatus(403).json({message:'Invalid Token'});
+      req.user = user;
+      next();
+    });
+}
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -91,16 +108,17 @@ app.get('/api/products', async (req, res) => {
 // CART ROUTES 
 
 // 1. Add to Cart
-app.post('/api/cart', async(req, res) => {
+app.post('/api/cart', authenticateToken, async(req, res) => {
     const { product_id, name, price, colour, image } = req.body;
+    const userId = req.user.id;
     console.log('product added to cart', [product_id, name, price, colour, image]);
 
     try {
-        const existing = await pool.query('SELECT * FROM cart WHERE (product_id = $1 AND colour = $2)', [product_id, colour]);
+        const existing = await pool.query('SELECT * FROM cart WHERE (product_id = $1 AND colour = $2 AND user_id = $3)', [product_id, colour, userId]);
         if (existing.rows.length > 0 ) {
-            await pool.query('UPDATE cart SET quantity = quantity + 1 WHERE (product_id = $1 AND colour = $2)', [product_id, colour])
+            await pool.query('UPDATE cart SET quantity = quantity + 1 WHERE (product_id = $1 AND colour = $2 AND user_id = $3)', [product_id, colour, userId])
         } else {
-            await pool.query('INSERT INTO cart (product_id, product_name, price, colour, image) VALUES  ($1, $2, $3, $4, $5)', [product_id, name, price, colour, image]);
+            await pool.query('INSERT INTO cart (product_id, product_name, price, colour, image, user_id) VALUES  ($1, $2, $3, $4, $5, $6)', [product_id, name, price, colour, image, userId]);
         }
         console.log('product added to cart', [product_id, name, price, colour, image]);
         res.json({message: 'Added to cart successfully'});
@@ -111,9 +129,10 @@ app.post('/api/cart', async(req, res) => {
 });
 
 // 2. Get Cart Items
-app.get('/api/cart', async(req, res) => {
+app.get('/api/cart', authenticateToken, async(req, res) => {
+    const userId = req.user.id;
     try {
-        const result = await pool.query('SELECT * FROM cart ORDER BY id ASC');
+        const result = await pool.query('SELECT * FROM cart WHERE user_id = $1 ORDER BY id ASC', [userId]);
         res.json(result.rows);
     } catch(err) {
         res.status(500).json({message: 'Database error'});
@@ -121,8 +140,9 @@ app.get('/api/cart', async(req, res) => {
 });
 
 // 3. Update Cart Quantity (NEW)
-app.put('/api/cart/:id', async (req, res) => {
+app.put('/api/cart/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
+    const userId = req.user.id;
     const { quantity } = req.body;
 
     // Basic validation
@@ -131,10 +151,10 @@ app.put('/api/cart/:id', async (req, res) => {
     }
 
     try {
-        // Update the quantity where the ID matches
+        // Update the quantity where the ID matches and belongs to the user
         const result = await pool.query(
-            'UPDATE cart SET quantity = $1 WHERE id = $2 RETURNING *',
-            [quantity, id]
+            'UPDATE cart SET quantity = $1 WHERE id = $2 AND user_id = $3 RETURNING *',
+            [quantity, id, userId]
         );
 
         if (result.rows.length === 0) {
@@ -149,13 +169,14 @@ app.put('/api/cart/:id', async (req, res) => {
 });
 
 // 4. Delete Cart Item (NEW)
-app.delete('/api/cart/:id', async (req, res) => {
+app.delete('/api/cart/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
+    const userId = req.user.id;
 
     try {
         const result = await pool.query(
-            'DELETE FROM cart WHERE id = $1 RETURNING *',
-            [id]
+            'DELETE FROM cart WHERE id = $1 AND user_id = $2 RETURNING *',
+            [id, userId]
         );
 
         if (result.rows.length === 0) {
@@ -168,6 +189,71 @@ app.delete('/api/cart/:id', async (req, res) => {
         res.status(500).json({ error: "Database error" });
     }
 });
+
+// 5. Get Order History for logged-in user
+app.get('/api/orders', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    try {
+        // Expect an 'orders' table with at least: id, user_id, total, created_at, metadata/json
+        const result = await pool.query('SELECT id, total, created_at, metadata FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error fetching orders:', err);
+        res.status(500).json({ message: 'Database error' });
+    }
+});
+
+// GOOGLE AUTH ROUTES
+// app.get('/auth/google', 
+//   passport.authenticate('google', { scope: ['profile', 'email'] })
+// );
+
+// app.get('/auth/google/callback', 
+//   passport.authenticate('google', { session: false, failureRedirect: '/login' }), 
+//   (req, res) => {
+//     // User is successfully authenticated and available in req.user
+//     const user = req.user;
+
+//     // Create JWT
+//     const token = jwt.sign(
+//       { id: user.id, email: user.email }, 
+//       process.env.JWT_SECRET, 
+//       { expiresIn: '24h' }
+//     );
+
+//     // Redirect to Frontend with token in query param
+//     res.redirect(`http://localhost:5173/login/success?token=${token}`);
+//   }
+// );
+
+// passport.use(new GoogleStrategy({
+//     clientID: process.env.GOOGLE_CLIENT_ID,
+//     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//     callbackURL: "/auth/google/callback" // Must match Google Console
+//   },
+//   async (accessToken, refreshToken, profile, done) => {
+//     try {
+//       // 1. Check if user exists in Neon
+//       const res = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
+      
+//       let user = res.rows[0];
+
+//       if (user) {
+//         // User exists
+//         return done(null, user);
+//       } else {
+//         // 2. User doesn't exist, create them
+//         const newRes = await pool.query(
+//           'INSERT INTO users (google_id, email, name) VALUES ($1, $2, $3) RETURNING *',
+//           [profile.id, profile.emails[0].value, profile.displayName]
+//         );
+//         return done(null, newRes.rows[0]);
+//       }
+//     } catch (err) {
+//       return done(err, null);
+//     }
+//   }
+// ));
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

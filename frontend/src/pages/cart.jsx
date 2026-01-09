@@ -1,24 +1,40 @@
 import Footer from './components/footer';
 import { useEffect, useState } from 'react';
+import { useAuth } from './useAuth';
+import { useNavigate } from 'react-router-dom';
 
 function Cart() {
     const [cartItems, setCartItems] = useState([]);
+    const { token } = useAuth();
+    const navigate = useNavigate();
 
     // 1. Fetch Initial Cart Data
     useEffect(() => {
-        fetchCartData();
-    }, []);
+        const fetchCartData = async () => {
+            if (!token) {
+                setCartItems([]);
+                return;
+            }
 
-    const fetchCartData = async () => {
-        try {
-            const res = await fetch('http://localhost:5000/api/cart');
-            if (!res.ok) throw new Error('Failed to fetch');
-            const data = await res.json();
-            setCartItems(data);
-        } catch (err) {
-            console.error(err);
-        }
-    };
+            try {
+                const res = await fetch('http://localhost:5000/api/cart', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.status === 401) {
+                    alert('Please login to view your cart.');
+                    navigate('/login');
+                    return;
+                }
+                if (!res.ok) throw new Error('Failed to fetch');
+                const data = await res.json();
+                setCartItems(data);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchCartData();
+    }, [token, navigate]);
 
     // 2. Handle Quantity Update (PUT Request)
     const updateQuantity = async (itemId, currentQuantity, change) => {
@@ -37,9 +53,15 @@ function Cart() {
         try {
             const response = await fetch(`http://localhost:5000/api/cart/${itemId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ quantity: newQuantity })
             });
+
+            if (response.status === 401) {
+                alert('Please login to update cart items');
+                navigate('/login');
+                return;
+            }
 
             if (!response.ok) {
                 throw new Error('Database update failed');
@@ -62,7 +84,14 @@ function Cart() {
         try {
             const response = await fetch(`http://localhost:5000/api/cart/${itemId}`, {
                 method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
             });
+
+            if (response.status === 401) {
+                alert('Please login to remove cart items');
+                navigate('/login');
+                return;
+            }
 
             if (!response.ok) {
                 throw new Error('Database delete failed');

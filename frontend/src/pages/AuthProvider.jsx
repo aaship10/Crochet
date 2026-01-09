@@ -2,20 +2,25 @@ import React, { useState } from 'react';
 import { AuthContext } from './AuthContext';
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(!!localStorage.getItem('token'));
+  const [auth, setAuth] = useState({
+    token: localStorage.getItem('token'),
+    user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
+  });
 
-  const login = (token) => {
+  const login = (token, user) => {
     localStorage.setItem('token', token);
-    setUser(true);
+    localStorage.setItem('user', JSON.stringify(user));
+    setAuth({ token, user });
   };
 
   const logout = () => {
     localStorage.removeItem('token');
-    setUser(false);
+    localStorage.removeItem('user');
+    setAuth({ token: null, user: null });
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user: !!auth.token, token: auth.token, userInfo: auth.user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import Footer from './components/footer';
 import ProductCard from './components/productCard';
 import img1 from '/p2-1.jpeg';
-import {Link} from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
+import { useAuth } from './useAuth';
 function Home() {
   const[products, setProducts] = useState([]);
   const [selectedColour, setSelectedColour] = useState(null);
@@ -19,18 +20,28 @@ function Home() {
     fetchProducts();
   }, []);
 
+  const { token } = useAuth();
+  const navigate = useNavigate();
+
   const handleAddToCart = async(product) => {
+    if(!token) {
+      alert('Please login to add items to your cart.');
+      navigate('/login');
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:5000/api/cart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ 
           product_id: product.id,
           name: product.name,
           price: product.price,
-          colour: selectedColour.name,
+          colour: selectedColour?.name,
           image: product.image_url
          }),
       });
@@ -38,6 +49,9 @@ function Home() {
       console.log(response);
       if (response.ok) {
         alert(`${product.name} added to cart!`);
+      } else if (response.status === 401) {
+        alert('Please login to add to cart');
+        navigate('/login');
       } else {
         alert('Failed to add item to cart.');
       }
@@ -70,7 +84,7 @@ function Home() {
                   <ProductCard
                     key={product.id}
                     product={product}
-                    onAddToCart={handleAddToCart(product)}
+                    onAddToCart={() => handleAddToCart(product)}
                     selectedColour={selectedColour}
                     setSelectedColour={setSelectedColour} />
                 ))) : (

@@ -7,6 +7,7 @@ import About from './pages/about'
 import Faq from './pages/faq'
 import Login from './pages/login'
 import Cart from './pages/cart'
+import Orders from './pages/orders'
 import Header from './pages/components/header'
 import  { AuthProvider } from './pages/AuthProvider'
 
@@ -21,6 +22,7 @@ function App() {
         <Route path="/faq" element={<Faq />} />
         <Route path="/login" element={<Login />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/orders" element={<Orders />} />
       </Routes>
     </AuthProvider>
   )

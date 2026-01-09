@@ -13,6 +13,15 @@ function AuthPage() {
   });
   const navigate = useNavigate();
   const { login } = useAuth();
+  // const [searchParams] = useSearchParams();
+
+  // useEffect(() => {
+  //   const token = searchParams.get("token");
+  //   if (token) {
+  //     localStorage.setItem("authToken", token); 
+  //     navigate("/dashboard"); 
+  //   }
+  // }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -49,7 +58,8 @@ function AuthPage() {
       const data = await response.json();
       if(response.ok){
         if(isLogin) {
-            login(data.token);
+            // Save token and user info
+            login(data.token, data.user);
             navigate('/product'); 
         } else {
             alert('Registration Successful! Please login.');
@@ -148,6 +158,9 @@ function AuthPage() {
                 {isLogin ? 'Login' : 'Sign Up'}
               </button>
             </form>
+            <button onClick={() => window.open("http://localhost:4000/auth/google", "_self")}>
+              Login with Google
+            </button>
           </div>
 
         </div>

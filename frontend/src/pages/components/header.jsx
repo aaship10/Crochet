@@ -70,7 +70,9 @@ function Header() {
         run();
     }, [fetchCartCount]);
 
-    const authLinks = loggedIn ? [] : [
+    const authLinks = loggedIn ? [
+        { name: 'Admin', path: '/adminDashboard' },
+    ] : [
         { name: 'Login / Register', path: '/login' }, 
     ];
 

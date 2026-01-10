@@ -10,7 +10,9 @@ import Cart from './pages/cart'
 import Orders from './pages/orders'
 import Header from './pages/components/header'
 import  { AuthProvider } from './pages/AuthProvider'
-
+import Checkout from './pages/checkout'
+import AdminDashboard from './pages/AdminDashboard'
+import PaymentPage from './pages/checkout'
 function App() {
   return (
     <AuthProvider>
@@ -23,6 +25,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path='/checkout' element={<Checkout />} />
+        <Route path='/adminDashboard' element={<AdminDashboard />} />
+        <Route path='/checkout' element={<PaymentPage />} />
       </Routes>
     </AuthProvider>
   )

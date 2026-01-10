@@ -36,20 +36,25 @@ function Cart() {
         fetchCartData();
     }, [token, navigate]);
 
-    // 2. Handle Quantity Update (PUT Request)
+    // 2. Handle Quantity Update
     const updateQuantity = async (itemId, currentQuantity, change) => {
+        if (!token) {
+            alert('Please login to update/remove items');
+            navigate('/login');
+            return;
+        }
+
         const newQuantity = currentQuantity + change;
         if (newQuantity < 1) return;
 
-        // A. Optimistic Update (Update UI immediately)
-        const originalItems = [...cartItems]; // Backup state in case of error
+        // Optimistic Update
+        const originalItems = [...cartItems];
         setCartItems(prevItems => 
             prevItems.map(item => 
                 item.id === itemId ? { ...item, quantity: newQuantity } : item
             )
         );
 
-        // B. Database Update
         try {
             const response = await fetch(`http://localhost:5000/api/cart/${itemId}`, {
                 method: 'PUT',
@@ -57,56 +62,48 @@ function Cart() {
                 body: JSON.stringify({ quantity: newQuantity })
             });
 
-            if (response.status === 401) {
-                alert('Please login to update cart items');
-                navigate('/login');
-                return;
-            }
-
-            if (!response.ok) {
-                throw new Error('Database update failed');
-            }
+            if (!response.ok) throw new Error('Database update failed');
         } catch (err) {
             console.error('Error updating quantity:', err);
-            // Revert UI if DB update fails
             setCartItems(originalItems);
             alert("Could not update quantity. Please try again.");
         }
     };
 
-    // 3. Handle Remove Item (DELETE Request)
+    // 3. Handle Remove Item
     const removeItem = async (itemId) => {
-        // A. Optimistic Update
+        if (!token) {
+            alert('Please login to update/remove items');
+            navigate('/login');
+            return;
+        }
+
         const originalItems = [...cartItems];
         setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
 
-        // B. Database Update
         try {
             const response = await fetch(`http://localhost:5000/api/cart/${itemId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            if (response.status === 401) {
-                alert('Please login to remove cart items');
-                navigate('/login');
-                return;
-            }
-
-            if (!response.ok) {
-                throw new Error('Database delete failed');
-            }
+            if (!response.ok) throw new Error('Database delete failed');
         } catch (err) {
             console.error('Error deleting item:', err);
-            // Revert UI if DB delete fails
             setCartItems(originalItems);
             alert("Could not delete item. Please try again.");
         }
     };
 
-    const handlePayment = () => {
-        alert("Redirecting to payment...");
-        // navigate('/checkout');
+    // 4. Handle Proceed to Payment (UPDATED)
+    // We just navigate to /checkout now. The actual "buy" API call happens there.
+    const proceedToCheckout = () => {
+        if (!token) {
+            alert('Please login to proceed with payment.');
+            navigate('/login');
+            return;
+        }
+        navigate('/checkout');
     };
 
     const grandTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -124,7 +121,14 @@ function Cart() {
                                 <li key={item.id} className='bg-white p-4 rounded-md shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4'>
                                     {/* Product Info */}
                                     <div className='flex items-center gap-4 w-full sm:w-auto'>
-                                        {item.image && <img src={item.image} alt={item.product_name} className='h-20 w-20 object-cover rounded-md border' />}
+                                        {/* Updated Image Logic for Backend Path */}
+                                        {item.image && (
+                                            <img 
+                                                src={item.image.startsWith('http') ? item.image : `http://localhost:5000${item.image}`} 
+                                                alt={item.product_name} 
+                                                className='h-20 w-20 object-cover rounded-md border' 
+                                            />
+                                        )}
                                         <div className='flex flex-col'>
                                             <span className='text-lg font-bold text-gray-800'>{item.product_name}</span>
                                             <span className='text-sm text-gray-500'>{item.colour ? `Colour: ${item.colour}` : ''}</span>
@@ -154,7 +158,7 @@ function Cart() {
                                 <span className='text-xl font-bold text-gray-700'>Grand Total:</span>
                                 <span className='text-3xl font-extrabold text-indigo-700'>${grandTotal.toFixed(2)}</span>
                             </div>
-                            <button onClick={handlePayment} className='bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold py-3 px-8 rounded-lg shadow-lg'>
+                            <button onClick={proceedToCheckout} className='bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold py-3 px-8 rounded-lg shadow-lg'>
                                 Proceed to Payment →
                             </button>
                         </div>

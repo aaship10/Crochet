@@ -6,7 +6,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-
+const multer = require('multer'); 
+const path = require('path');
 const SECRET_KEY = process.env.SECRET_KEY;
 
 const app = express();
@@ -16,20 +17,34 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/'); 
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
+
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-    if(!token)
-      return res.sendStatus(401).json({message:'Access Denied!'});
+  if (!token) 
+    return res.status(401).json({ message: 'Access Denied! No token provided.' });
 
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-      if(err) 
-        return res.sendStatus(403).json({message:'Invalid Token'});
-      req.user = user;
-      next();
-    });
-}
+  jwt.verify(token, SECRET_KEY, (err, user) => {
+
+    if (err)
+      return res.status(403).json({ message: 'Invalid or expired token' });
+    req.user = user;
+    next();
+  });
+};
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -105,6 +120,26 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
+app.post('/api/products', upload.single('productImage'), async (req, res) => {
+    try {
+        const { name, price } = req.body; // Removed 'description' as it's not in your DB
+        
+        // Create full URL for the image
+        const imageUrl = req.file ? `/public/${req.file.filename}` : null;
+        const imageurl = req.file ? `http://localhost:5000/public/${req.file.filename}` : null;
+        // Inserting into your existing table structure
+        const result = await pool.query(
+            'INSERT INTO products (name, price, image_url) VALUES ($1, $2, $3) RETURNING *',
+            [name, price, imageurl]
+        );
+        
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("Error adding product:", err);
+        res.status(500).send('Server Error');
+    }
+});
+
 // CART ROUTES 
 
 // 1. Add to Cart
@@ -118,7 +153,7 @@ app.post('/api/cart', authenticateToken, async(req, res) => {
         if (existing.rows.length > 0 ) {
             await pool.query('UPDATE cart SET quantity = quantity + 1 WHERE (product_id = $1 AND colour = $2 AND user_id = $3)', [product_id, colour, userId])
         } else {
-            await pool.query('INSERT INTO cart (product_id, product_name, price, colour, image, user_id) VALUES  ($1, $2, $3, $4, $5, $6)', [product_id, name, price, colour, image, userId]);
+            await pool.query('INSERT INTO cart (product_id, product_name, price, colour, image, user_id, "dateForAddToCart" ) VALUES  ($1, $2, $3, $4, $5, $6, NOW())', [product_id, name, price, colour, image, userId]);
         }
         console.log('product added to cart', [product_id, name, price, colour, image]);
         res.json({message: 'Added to cart successfully'});
@@ -132,7 +167,7 @@ app.post('/api/cart', authenticateToken, async(req, res) => {
 app.get('/api/cart', authenticateToken, async(req, res) => {
     const userId = req.user.id;
     try {
-        const result = await pool.query('SELECT * FROM cart WHERE user_id = $1 ORDER BY id ASC', [userId]);
+        const result = await pool.query('SELECT * FROM cart WHERE user_id = $1 AND "cartStatus" = TRUE ORDER BY id ASC', [userId]);
         res.json(result.rows);
     } catch(err) {
         res.status(500).json({message: 'Database error'});
@@ -190,6 +225,25 @@ app.delete('/api/cart/:id', authenticateToken, async (req, res) => {
     }
 });
 
+app.post('/api/cart/buy', authenticateToken, async(req, res) => {
+    const userId = req.user.id;
+    try {
+        // CHANGED: Status starts as 'paymentPending' instead of 'outForDelivery'
+        await pool.query(
+            `UPDATE cart 
+             SET status = $1, "cartStatus" = $2, "dateForOutForDelivery" = NOW() 
+             WHERE user_id = $3 AND "cartStatus" = TRUE`, 
+            ['paymentPending', false, userId]
+        );
+
+        return res.status(200).json({message: 'Order placed successfully!'});
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({error: 'Database error'});
+    }
+});
+
 // 5. Get Order History for logged-in user
 app.get('/api/orders', authenticateToken, async (req, res) => {
     const userId = req.user.id;
@@ -203,57 +257,117 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
     }
 });
 
+app.get('/api/admin/orders', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                c.id,
+                c.product_name,
+                c.quantity,
+                c.price,
+                c.status,
+                c.transaction_id,
+                c."dateForOutForDelivery" as order_date,
+                c."dateOfDelivery",
+                u.name as user_name
+            FROM cart c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.status != 'addedToCart' -- Show everything except active shopping carts
+            ORDER BY 
+                (c.status = 'delivered') ASC, -- False (0) comes first, True (1) goes to bottom
+                c."dateForOutForDelivery" DESC;
+        `;
+        
+        const { rows } = await pool.query(query);
+        res.json(rows);
+    } catch (err) {
+        console.error("Error fetching admin orders:", err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
 // GOOGLE AUTH ROUTES
-// app.get('/auth/google', 
-//   passport.authenticate('google', { scope: ['profile', 'email'] })
-// );
+app.get('/auth/google', 
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
 
-// app.get('/auth/google/callback', 
-//   passport.authenticate('google', { session: false, failureRedirect: '/login' }), 
-//   (req, res) => {
-//     // User is successfully authenticated and available in req.user
-//     const user = req.user;
+app.get('/auth/google/callback', 
+  passport.authenticate('google', { session: false, failureRedirect: '/login' }), 
+  (req, res) => {
+    // User is successfully authenticated and available in req.user
+    const user = req.user;
 
-//     // Create JWT
-//     const token = jwt.sign(
-//       { id: user.id, email: user.email }, 
-//       process.env.JWT_SECRET, 
-//       { expiresIn: '24h' }
-//     );
+    // Create JWT
+    const token = jwt.sign(
+      { id: user.id, email: user.email }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '24h' }
+    );
 
-//     // Redirect to Frontend with token in query param
-//     res.redirect(`http://localhost:5173/login/success?token=${token}`);
-//   }
-// );
+    // Redirect to Frontend with token in query param
+    res.redirect(`http://localhost:5173/login/success?token=${token}`);
+  }
+);
 
-// passport.use(new GoogleStrategy({
-//     clientID: process.env.GOOGLE_CLIENT_ID,
-//     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-//     callbackURL: "/auth/google/callback" // Must match Google Console
-//   },
-//   async (accessToken, refreshToken, profile, done) => {
-//     try {
-//       // 1. Check if user exists in Neon
-//       const res = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "/auth/google/callback" // Must match Google Console
+  },
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      // 1. Check if user exists in Neon
+      const res = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
       
-//       let user = res.rows[0];
+      let user = res.rows[0];
 
-//       if (user) {
-//         // User exists
-//         return done(null, user);
-//       } else {
-//         // 2. User doesn't exist, create them
-//         const newRes = await pool.query(
-//           'INSERT INTO users (google_id, email, name) VALUES ($1, $2, $3) RETURNING *',
-//           [profile.id, profile.emails[0].value, profile.displayName]
-//         );
-//         return done(null, newRes.rows[0]);
-//       }
-//     } catch (err) {
-//       return done(err, null);
-//     }
-//   }
-// ));
+      if (user) {
+        // User exists
+        return done(null, user);
+      } else {
+        // 2. User doesn't exist, create them
+        const newRes = await pool.query(
+          'INSERT INTO users (google_id, email, name) VALUES ($1, $2, $3) RETURNING *',
+          [profile.id, profile.emails[0].value, profile.displayName]
+        );
+        return done(null, newRes.rows[0]);
+      }
+    } catch (err) {
+      return done(err, null);
+    }
+  }
+));
+
+app.put('/api/admin/orders/:id/status', async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body; 
+
+    try {
+        let query;
+        let params;
+
+        // If setting to 'delivered', also save the timestamp
+        if (status === 'delivered') {
+            query = 'UPDATE cart SET status = $1, "dateOfDelivery" = NOW() WHERE id = $2 RETURNING *';
+            params = [status, id];
+        } else {
+            // Otherwise just update the status
+            query = 'UPDATE cart SET status = $1 WHERE id = $2 RETURNING *';
+            params = [status, id];
+        }
+
+        const result = await pool.query(query, params);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Order not found" });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("Error updating status:", err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

@@ -1,22 +1,26 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useCallback } from 'react';
-import  { useAuth } from '../useAuth';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from '../useAuth';
 
 function Header() {
     const location = useLocation();
     const navigate = useNavigate();
-    const [open, setOpen] = useState(false);
-    const [cartCount, setCartCount] = useState(0);
-    const [ordersOpen, setOrdersOpen] = useState(false);
-    const [orderHistory, setOrderHistory] = useState([]);
     const { user: loggedIn, logout, userInfo, token } = useAuth();
+    const ADMIN_EMAIL = "aashita@gmail.com"; 
+    
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    const [cartCount, setCartCount] = useState(0);
+    const [orderCount, setOrderCount] = useState(0);
 
     const isActive = (path) => location.pathname === path;
 
     const links = [
         { name: 'Home', path: '/' },
         { name: 'About', path: '/about' },
-        { name: 'Product', path: '/product' },
+        { name: 'Shop', path: '/product' },
         { name: 'FAQ', path: '/faq' },
     ];
 
@@ -30,138 +34,185 @@ function Header() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.status === 401) {
-                // session expired or invalid, clear auth
                 logout();
-                setCartCount(0);
                 return;
             }
-            if (!res.ok) return;
-            const data = await res.json();
-            setCartCount(Array.isArray(data) ? data.length : 0);
+            if (res.ok) {
+                const data = await res.json();
+                setCartCount(Array.isArray(data) ? data.length : 0);
+            }
         } catch (err) {
             console.error('Failed to fetch cart count', err);
         }
     }, [token, logout]);
 
-    const fetchOrders = useCallback(async () => {
-        if (!token) {
-            setOrderHistory([]);
-            return;
-        }
+    const fetchOrderCount = useCallback(async () => {
+        if (!token) return;
         try {
             const res = await fetch('http://localhost:5000/api/orders', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (res.status === 401) {
-                logout();
-                setOrderHistory([]);
-                return;
+            if (res.ok) {
+                const data = await res.json();
+                setOrderCount(Array.isArray(data) ? data.length : 0);
             }
-            if (!res.ok) return;
-            const data = await res.json();
-            setOrderHistory(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Failed to fetch orders', err);
         }
-    }, [token, logout]);
+    }, [token]);
 
     useEffect(() => {
-        const run = async () => { await fetchCartCount(); };
-        run();
-    }, [fetchCartCount]);
+        fetchCartCount();
+        if(loggedIn) fetchOrderCount();
+    }, [fetchCartCount, fetchOrderCount, loggedIn]);
 
-    const authLinks = loggedIn ? [
-        { name: 'Admin', path: '/adminDashboard' },
-    ] : [
-        { name: 'Login / Register', path: '/login' }, 
-    ];
-
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsProfileOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [dropdownRef]);
 
 
     return (
-        // Added 'backdrop-blur-md' for a frosted glass effect
-        <header className="flex flex-row justify-between items-center bg-purple-200/80 backdrop-blur-sm p-4 sticky top-0 z-10 w-full shadow-sm">
-            
-            {/* Main Navigation Links */}
-            <div className="flex flex-row justify-center items-center">
-                {links.map(link => (
-                    <Link 
-                        key={link.path}
-                        to={link.path}
-                        className={`mx-2 px-4 transition-colors ${
-                            isActive(link.path) 
-                            ? 'font-extrabold text-purple-900' 
-                            : 'font-medium text-purple-700 hover:text-purple-900'
-                        }`}
-                    >
-                        {link.name}
-                    </Link>
-                ))}
-            </div>
+        <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-stone-100 shadow-sm font-sans">
+            <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+                
+                <Link to="/" className="flex items-center gap-2 group">
+                    <span className="text-2xl font-serif font-bold text-stone-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                        Crochet<span className="text-orange-500">.</span>
+                    </span>
+                </Link>
 
-            {/* Auth Links & Logout Button */}
-            <div className="flex flex-row justify-center items-center">
-                {authLinks.map(link => (
-                    <Link
-                        key={link.path}
-                        to={link.path}
-                        className={`mx-2 px-4 transition-colors ${
-                            isActive(link.path) 
-                            ? 'font-bold text-purple-900' 
-                            : 'font-medium text-purple-700 hover:text-purple-900'
-                        }`}
-                    >
-                        {link.name}
-                    </Link>
-                ))}
-
-                {/* Profile Dropdown */}
-                {loggedIn && (
-                    <div className="relative">
-                        <button
-                            onClick={() => { const newOpen = !open; setOpen(newOpen); if (newOpen) fetchCartCount(); }}
-                            className="mx-2 px-4 font-medium text-purple-700 hover:text-purple-900 transition-colors flex items-center gap-2"
+                <nav className="hidden md:flex items-center gap-8">
+                    {links.map(link => (
+                        <Link 
+                            key={link.path} 
+                            to={link.path}
+                            className={`text-sm font-medium tracking-wide transition-all duration-300 relative py-2 ${
+                                isActive(link.path) 
+                                ? 'text-orange-600' 
+                                : 'text-stone-600 hover:text-stone-900'
+                            }`}
                         >
-                            {userInfo?.name ? userInfo.name : 'Profile'}
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20"
-                            fill="currentColor">
-                                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                            {link.name}
+                            <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-orange-500 transform origin-left transition-transform duration-300 ${isActive(link.path) ? 'scale-x-100' : 'scale-x-0'}`}></span>
+                        </Link>
+                    ))}
+                </nav>
+
+                <div className="flex items-center gap-4 md:gap-6">
+                    
+                    <Link to="/cart" className="relative group text-stone-600 hover:text-orange-600 transition-colors">
+                        {loggedIn ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+
+                            
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                             </svg>
-                        </button>
-
-                        {open && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20">
-                                <div className="px-4 py-3 border-b">
-                                    <p className="text-sm text-gray-600">Signed in as</p>
-                                    <p className="font-medium text-gray-800">{userInfo?.name || 'User'}</p>
-                                </div>
-                                <Link to="/cart" onClick={() => setOpen(false)} className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center justify-between">
-                                    <span>Cart</span>
-                                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-indigo-600 rounded-full">{cartCount}</span>
-                                </Link>
-
-                                {/* Orders toggler */}
-                                <div className="w-full">
-                                    <button
-                                        onClick={() => { const newOpen = !ordersOpen; setOrdersOpen(newOpen); if (newOpen) fetchOrders(); }}
-                                        className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center justify-between"
-                                    >
-                                        <span>Orders</span>
-                                        <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-gray-500 rounded-full">{orderHistory.length}</span>
-                                    </button>
-                                </div>
-
-                                <button
-                                    onClick={() => { logout(); setOpen(false); navigate('/'); }}
-                                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                                >
-                                    Logout
-                                </button>
-                            </div>
+                        ) : null}
+                        {cartCount > 0 && (
+                            <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full shadow-md">
+                                {cartCount}
+                            </span>
                         )}
-                    </div>
-                )}
+                    </Link>
+
+                    {loggedIn ? (
+                        <div className="relative" ref={dropdownRef}>
+                            <button 
+                                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                className="flex items-center gap-2 text-stone-600 hover:text-stone-900 focus:outline-none"
+                            >
+                                <div className="h-8 w-8 rounded-full bg-stone-200 flex items-center justify-center overflow-hidden border border-stone-300">
+                                   <span className="font-bold text-stone-600 uppercase">
+                                       {userInfo?.name ? userInfo.name[0] : 'U'}
+                                   </span>
+                                </div>
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {isProfileOpen && (
+                                <div className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-xl border border-stone-100 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div className="px-4 py-3 border-b border-stone-100 bg-stone-50">
+                                        <p className="text-xs text-stone-500 uppercase font-semibold">Signed in as</p>
+                                        <p className="text-sm font-bold text-stone-800 truncate">{userInfo?.name}</p>
+                                    </div>
+                                    
+                                    <div className="py-1">
+                                        <Link to="/orders" className="flex items-center justify-between px-4 py-2 text-sm text-stone-600 hover:bg-orange-50 hover:text-orange-700 transition-colors">
+                                            <span>My Orders</span>
+                                            {orderCount > 0 && <span className="bg-stone-200 text-stone-600 py-0.5 px-2 rounded-full text-xs font-bold">{orderCount}</span>}
+                                        </Link>
+                                        
+                                        {/* REMOVED SETTINGS LINK */}
+
+                                        {/* ADMIN LINK (Only visible to specific email) */}
+                                        {userInfo?.email === ADMIN_EMAIL && (
+                                            <Link to="/adminDashboard" className="block px-4 py-2 text-sm text-stone-600 hover:bg-orange-50 hover:text-orange-700 transition-colors">
+                                                Admin Dashboard
+                                            </Link>
+                                        )}
+                                    </div>
+
+                                    <div className="border-t border-stone-100 mt-1 pt-1">
+                                        <button 
+                                            onClick={() => { logout(); setIsProfileOpen(false); navigate('/'); }}
+                                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium transition-colors"
+                                        >
+                                            Sign out
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="hidden md:block">
+                            <Link to="/login" className="px-5 py-2.5 rounded-full bg-stone-900 text-white text-sm font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-stone-200">
+                                Login
+                            </Link>
+                        </div>
+                    )}
+
+                    {/* Mobile Menu Toggle */}
+                    <button 
+                        className="md:hidden text-stone-600 hover:text-stone-900"
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                    </button>
+                </div>
             </div>
+
+            {/* --- MOBILE NAV OVERLAY --- */}
+            {isMobileMenuOpen && (
+                <div className="md:hidden bg-white border-t border-stone-100 shadow-inner px-4 py-6 space-y-4 animate-in slide-in-from-top-2">
+                    {links.map(link => (
+                        <Link 
+                            key={link.path}
+                            to={link.path} 
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={`block text-lg font-medium ${isActive(link.path) ? 'text-orange-600' : 'text-stone-600'}`}
+                        >
+                            {link.name}
+                        </Link>
+                    ))}
+                    {!loggedIn && (
+                         <Link 
+                            to="/login"
+                            onClick={() => setIsMobileMenuOpen(false)} 
+                            className="block w-full text-center py-3 mt-4 rounded-lg bg-stone-900 text-white font-bold"
+                        >
+                            Login / Register
+                         </Link>
+                    )}
+                </div>
+            )}
         </header>
     );
 }

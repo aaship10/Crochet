@@ -1,27 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Footer from './components/footer';
-import { useAuth } from './useAuth'
+import { useAuth } from './useAuth';
 
 function AuthPage() {
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(false); // Default to Register to show new fields
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
+    address: '',
     password: '',
     confirmPassword: ''
   });
+  
   const navigate = useNavigate();
   const { login } = useAuth();
-  // const [searchParams] = useSearchParams();
-
-  // useEffect(() => {
-  //   const token = searchParams.get("token");
-  //   if (token) {
-  //     localStorage.setItem("authToken", token); 
-  //     navigate("/dashboard"); 
-  //   }
-  // }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,130 +31,190 @@ function AuthPage() {
 
     const endpoint = isLogin ? '/auth/login' : '/auth/register';
 
-    try{
+    try {
+      // Construct Payload
       const payload = isLogin ? {
-              email: formData.email,
-              password: formData.password
-          } : {
-            name: formData.name,
             email: formData.email,
             password: formData.password
-          };
-      const response = await fetch(`http://localhost:5000${endpoint}`, 
-        {
+        } : {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,      // Added Phone
+            address: formData.address,  // Added Address
+            password: formData.password
+        };
+
+      const response = await fetch(`http://localhost:5000${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify( payload ),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
-      if(response.ok){
-        if(isLogin) {
-            // Save token and user info
+      
+      if (response.ok) {
+        if (isLogin) {
             login(data.token, data.user);
             navigate('/product'); 
         } else {
             alert('Registration Successful! Please login.');
             setIsLogin(true);
+            // Optional: Clear form or keep email pre-filled
         }
-      }
-      else{
+      } else {
         alert(data.error || data.message || 'Something went wrong');
       }
-    }
-    catch(err){
+    } catch (err) {
       console.error('Error:', err);
     }
   };
   
   return (
-    <div className='flex flex-col min-h-screen'>
-      <main className='flex-grow flex flex-col justify-center items-center'>
+    <div className='flex flex-col min-h-screen bg-stone-50 font-sans text-stone-800'>
+      <main className='flex-grow flex flex-col justify-center items-center py-12 px-4'>
         
-        <div className='bg-fuchsia-200 flex flex-row rounded-xl overflow-hidden shadow-2xl max-w-5xl w-full m-10'>
+        <div className='bg-white flex flex-col md:flex-row rounded-2xl overflow-hidden shadow-xl max-w-5xl w-full border border-stone-100'>
           
-          <div className='p-10 w-1/2 flex justify-center items-center flex-col gap-6 text-center'>
-            <p className='text-6xl font-extrabold text-white drop-shadow-md'>
-              {isLogin ? 'Welcome Back!' : 'Join Us Today!'}
-            </p>
-            <span className='text-purple-900 text-lg font-medium'>
-              {isLogin 
-                ? 'Login to continue your booking journey.' 
-                : 'Start your journey with us by creating an account.'}
-            </span>
-            <span className='text-indigo-600 font-semibold'>
-              {isLogin ? "Don't have an account?" : "Already have an account?"} 
-              <button 
-                onClick={() => setIsLogin(!isLogin)} 
-                className='ml-2 underline hover:text-indigo-800 transition-colors cursor-pointer'
-              >
-                {isLogin ? 'Register here' : 'Login here'}
-              </button>
-            </span>
+          {/* --- LEFT SIDE: VISUALS --- */}
+          
+          <div className='hidden md:flex w-1/2 bg-orange-50 relative flex-col justify-center items-center text-center p-12'>
+            {/* Background Image Overlay */}
+            <div className="absolute inset-0 z-0">
+                 {/* You can put an actual <img /> here with object-cover opacity-20 if you want */}
+                 <div className="absolute inset-0 bg-stone-900/10"></div> 
+            </div>
+            
+            <div className="relative z-10 space-y-6">
+                <h2 className='text-4xl lg:text-5xl font-serif font-bold text-stone-900'>
+                {isLogin ? 'Welcome Back!' : 'Join the Family'}
+                </h2>
+                <p className='text-stone-600 text-lg max-w-sm mx-auto'>
+                {isLogin 
+                    ? 'Login to access your saved items and track your orders.' 
+                    : 'Create an account to enjoy exclusive offers, faster checkout, and order tracking.'}
+                </p>
+                <button 
+                    onClick={() => setIsLogin(!isLogin)} 
+                    className='inline-block px-8 py-3 border-2 border-stone-900 text-stone-900 font-bold rounded-full hover:bg-stone-900 hover:text-white transition-all duration-300'
+                >
+                    {isLogin ? 'Create an Account' : 'I have an account'}
+                </button>
+            </div>
           </div>
 
-          <div className='bg-indigo-300 w-1/2 flex flex-col justify-center items-center gap-6 p-10'>
-            <h1 className='text-4xl font-extrabold text-white'>
+          {/* --- RIGHT SIDE: FORM --- */}
+          <div className='w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center'>
+            <h1 className='text-3xl font-serif font-bold text-stone-900 mb-8 text-center md:text-left'>
               {isLogin ? 'Login to Account' : 'Create Account'}
             </h1>
             
-            <form onSubmit={handleSubmit} className='flex flex-col gap-4 w-full px-8'>
+            <form onSubmit={handleSubmit} className='space-y-4'>
               
               {!isLogin && (
-                <input 
-                  name='name'
-                  value={formData.name}
-                  onChange={handleChange}
-                  type='text' 
-                  placeholder='Full Name'
-                  className='p-3 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all'
-                  required
-                />
+                <>
+                    {/* Full Name */}
+                    <div>
+                        <input 
+                            name='name'
+                            value={formData.name}
+                            onChange={handleChange}
+                            type='text' 
+                            placeholder='Full Name'
+                            className='w-full p-4 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all'
+                            required
+                        />
+                    </div>
+                    
+                    {/* Phone Number */}
+                    <div>
+                        <input 
+                            name='phone'
+                            value={formData.phone}
+                            onChange={handleChange}
+                            type='tel' 
+                            placeholder='Phone Number'
+                            className='w-full p-4 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all'
+                            required
+                        />
+                    </div>
+
+                    {/* Address */}
+                    <div>
+                        <textarea 
+                            name='address'
+                            value={formData.address}
+                            onChange={handleChange}
+                            placeholder='Shipping Address'
+                            rows="2"
+                            className='w-full p-4 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all resize-none'
+                            required
+                        />
+                    </div>
+                </>
               )}
 
-              <input 
-                name='email'
-                value={formData.email}
-                onChange={handleChange}
-                type='email' 
-                placeholder='Email'
-                className='p-3 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all'
-                required
-              />
-              <input
-                name='password'
-                value={formData.password}
-                onChange={handleChange}
-                type='password'
-                placeholder='Password'
-                className='p-3 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all'
-                required
-              />
+              {/* Email */}
+              <div>
+                <input 
+                    name='email'
+                    value={formData.email}
+                    onChange={handleChange}
+                    type='email' 
+                    placeholder='Email Address'
+                    className='w-full p-4 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all'
+                    required
+                />
+              </div>
 
+              {/* Password */}
+              <div>
+                <input
+                    name='password'
+                    value={formData.password}
+                    onChange={handleChange}
+                    type='password'
+                    placeholder='Password'
+                    className='w-full p-4 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all'
+                    required
+                />
+              </div>
+
+              {/* Confirm Password */}
               {!isLogin && (
-                 <input
-                 name='confirmPassword'
-                 value={formData.confirmPassword}
-                 onChange={handleChange}
-                 type='password'
-                 placeholder='Confirm Password'
-                 className='p-3 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all'
-                 required
-               />
+                 <div>
+                    <input
+                        name='confirmPassword'
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        type='password'
+                        placeholder='Confirm Password'
+                        className='w-full p-4 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all'
+                        required
+                    />
+                 </div>
               )}
 
               <button
                 type='submit'
-                className='mt-4 p-3 bg-purple-600 text-white font-bold rounded-md hover:bg-purple-700 transition-colors shadow-md'
+                className='w-full p-4 mt-6 bg-stone-900 text-white font-bold rounded-lg hover:bg-orange-600 transition-colors shadow-lg'
               >
-                {isLogin ? 'Login' : 'Sign Up'}
+                {isLogin ? 'Sign In' : 'Register'}
               </button>
-            </form>
-            <button onClick={() => window.open("http://localhost:4000/auth/google", "_self")}>
-              Login with Google
-            </button>
+            </form>    
+            
+            {/* Mobile Toggle for Login/Register */}
+            <div className='md:hidden mt-6 text-center'>
+                <p className='text-stone-600'>
+                    {isLogin ? "Don't have an account?" : "Already have an account?"} 
+                    <button 
+                        onClick={() => setIsLogin(!isLogin)} 
+                        className='ml-2 font-bold text-orange-600'
+                    >
+                        {isLogin ? 'Register' : 'Login'}
+                    </button>
+                </p>
+            </div>
+
           </div>
 
         </div>

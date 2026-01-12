@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from './useAuth'; // Assuming you have this hook from previous code
+import { useAuth } from './useAuth'; 
 import img1 from '/Payment.jpeg';
 
 const PaymentPage = () => {
@@ -10,7 +10,7 @@ const PaymentPage = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
 
-  // Fake UPI QR Code for demo (Replace 'data=' with your actual UPI ID or Payment URL)
+  // Fake UPI QR Code for demo
   const qrCodeUrl = img1;
 
   const handlePayment = async (e) => {
@@ -24,89 +24,140 @@ const PaymentPage = () => {
     setLoading(true);
 
     try {
-      // Call the backend to finalize the order and save the Transaction ID
+      // Call the backend to finalize the order
       const response = await fetch('http://localhost:5000/api/cart/buy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ transactionId }) // Sending the ID to backend
+        body: JSON.stringify({ transactionId }) 
       });
 
       if (response.ok) {
-        // Show the success popup
         setShowModal(true);
-        
-        // Redirect after 3 seconds
         setTimeout(() => {
-          navigate('/'); // Redirects to Products/Home page
+          navigate('/orders'); // Redirects to Orders page usually makes more sense than home
         }, 3000);
       } else {
-        alert("Payment failed. Please try again.");
+        alert("Payment verification failed. Please check the ID and try again.");
       }
     } catch (error) {
       console.error("Payment Error:", error);
-      alert("Something went wrong.");
+      alert("Something went wrong with the server.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4 font-sans text-stone-800">
       
-      <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Scan to Pay</h1>
+      {/* --- MAIN CARD --- */}
+      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-stone-100">
         
-        {/* QR Code Display */}
-        <div className="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300 inline-block mb-6">
-          <img src={qrCodeUrl} alt="Payment QR Code" className="w-52 h-52 mx-auto" />
-          <p className="text-sm text-gray-500 mt-2">Scan with any UPI App</p>
-        </div>
+        {/* LEFT SIDE: Visuals & QR */}
+        <div className="w-full md:w-1/2 bg-stone-900 text-white p-8 md:p-12 flex flex-col items-center justify-center text-center relative overflow-hidden">
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500 rounded-full blur-[100px] opacity-20 -mr-16 -mt-16"></div>
+          
+          <h2 className="text-3xl font-serif font-bold mb-2 relative z-10">Scan to Pay</h2>
+          <p className="text-stone-400 mb-8 relative z-10">Secure Checkout via UPI</p>
+          
+          {/* QR Code Container */}
+          <div className="bg-white p-4 rounded-xl shadow-lg transform transition-transform hover:scale-105 duration-300 relative z-10">
+            
 
-        {/* Payment Form */}
-        <form onSubmit={handlePayment} className="space-y-4 text-left">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Transaction ID / UTR
-            </label>
-            <input 
-              type="text" 
-              placeholder="Enter Transaction ID (e.g. 1234567890)" 
-              value={transactionId}
-              onChange={(e) => setTransactionId(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              required
+[Image of QR code scanner]
+
+            <img 
+                src={qrCodeUrl} 
+                alt="Payment QR Code" 
+                className="w-48 h-48 object-contain" 
             />
           </div>
+          
+          <p className="text-xs text-stone-500 mt-6 relative z-10">
+            Accepting GPay, PhonePe, Paytm, and BHIM
+          </p>
+        </div>
 
-          <button 
-            type="submit" 
-            disabled={loading}
-            className={`w-full py-3 rounded-lg text-white font-bold transition duration-200 
-              ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'}`}
-          >
-            {loading ? 'Processing...' : 'Click to Pay'}
-          </button>
-        </form>
+        {/* RIGHT SIDE: Form & Instructions */}
+        <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+          
+          <div className="mb-8">
+            <h3 className="text-xl font-bold text-stone-900 mb-4">Payment Instructions</h3>
+            <ol className="list-decimal list-inside space-y-2 text-sm text-stone-600 marker:text-orange-500 marker:font-bold">
+                <li>Open your preferred UPI app.</li>
+                <li>Scan the QR code on the left.</li>
+                <li>Complete the payment.</li>
+                <li><strong>Important:</strong> Copy the 12-digit Transaction ID / UTR.</li>
+                <li>Paste it below to confirm your order.</li>
+            </ol>
+          </div>
+
+          <form onSubmit={handlePayment} className="space-y-6">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">
+                Transaction ID / UTR
+              </label>
+              <input 
+                type="text" 
+                placeholder="e.g. 3245 8901 2345" 
+                value={transactionId}
+                onChange={(e) => setTransactionId(e.target.value)}
+                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:bg-white focus:outline-none transition-all font-mono"
+                required
+              />
+            </div>
+
+            <div className="flex flex-col gap-3">
+                <button 
+                    type="submit" 
+                    disabled={loading}
+                    className={`w-full py-4 rounded-full font-bold shadow-lg transition-all duration-300 transform active:scale-95
+                    ${loading 
+                        ? 'bg-stone-200 text-stone-400 cursor-not-allowed' 
+                        : 'bg-stone-900 text-white hover:bg-orange-600 hover:shadow-orange-200'
+                    }`}
+                >
+                    {loading ? 'Verifying...' : 'Confirm Payment'}
+                </button>
+                
+                <button 
+                    type="button"
+                    onClick={() => navigate('/cart')}
+                    className="text-stone-400 hover:text-stone-600 text-sm font-medium transition-colors"
+                >
+                    Cancel and return to Cart
+                </button>
+            </div>
+          </form>
+        </div>
       </div>
 
-      {/* --- SUCCESS POPUP MODAL --- */}
+      {/* --- SUCCESS MODAL --- */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-xl shadow-2xl text-center max-w-sm mx-4 transform transition-all scale-100">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-              <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-              </svg>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-200"></div>
+            
+            <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center animate-in zoom-in-95 duration-300">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                
+                <h3 className="text-2xl font-serif font-bold text-stone-900 mb-2">Order Confirmed!</h3>
+                <p className="text-stone-500 mb-6">
+                    Thank you for supporting our small business. We will start crafting your order immediately.
+                </p>
+                
+                <div className="w-full bg-stone-100 h-1 rounded-full overflow-hidden">
+                    <div className="h-full bg-orange-500 animate-[width_3s_ease-in-out_forwards]" style={{width: '0%'}}></div>
+                </div>
+                <p className="text-xs text-stone-400 mt-2">Redirecting you...</p>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Order Booked!</h3>
-            <p className="text-gray-600 mb-6">
-              Payment confirmation will be received shortly.
-            </p>
-            <p className="text-sm text-gray-400">Redirecting to shop...</p>
-          </div>
         </div>
       )}
 

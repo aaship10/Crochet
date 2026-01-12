@@ -5,7 +5,6 @@ const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const multer = require('multer'); 
 const path = require('path');
 const SECRET_KEY = process.env.SECRET_KEY;
@@ -59,17 +58,17 @@ app.get('/', (req, res) => {
 
 // AUTH ROUTES
 app.post('/auth/register', async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone, address } = req.body;
 
-    if (!name || !email || !password) 
+    if (!name || !email || !password || !phone || !address) 
     {
-        return res.status(400).json({ error: "Name, email and password are required" });
+        return res.status(400).json({ error: "Name, email, password, phone and address are required" });
     }
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
         const result = await pool.query(
-            'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email',
-            [name, email, hashedPassword]
+            'INSERT INTO users (name, email, password, phone, address) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email',
+            [name, email, hashedPassword, phone, address]
         );
         res.json({message:"User registered!", user: result.rows[0]});
     }
@@ -120,23 +119,46 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-app.post('/api/products', upload.single('productImage'), async (req, res) => {
+app.post('/api/products', upload.array('productImages', 4), async (req, res) => {
     try {
         const { name, price } = req.body; // Removed 'description' as it's not in your DB
         
+        if (!req.files || req.files.length !== 4) {
+            return res.status(400).json({ error: "Exactly 4 images are required" });
+        }
+
         // Create full URL for the image
-        const imageUrl = req.file ? `/public/${req.file.filename}` : null;
-        const imageurl = req.file ? `http://localhost:5000/public/${req.file.filename}` : null;
+        const imageUrls = req.files.map(file => `http://localhost:5000/public/${file.filename}`);
+
+        console.log(imageUrls);
         // Inserting into your existing table structure
         const result = await pool.query(
-            'INSERT INTO products (name, price, image_url) VALUES ($1, $2, $3) RETURNING *',
-            [name, price, imageurl]
+            'INSERT INTO products (name, price, images) VALUES ($1, $2, $3) RETURNING *',
+            [name, price, imageUrls]
         );
         
         res.json(result.rows[0]);
     } catch (err) {
         console.error("Error adding product:", err);
         res.status(500).send('Server Error');
+    }
+});
+
+app.delete('/api/products/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Delete the product from the database
+        const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING *', [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Product not found" });
+        }
+        
+        res.json({ message: "Product deleted successfully" });
+    } catch (err) {
+        console.error("Error deleting product:", err);
+        // This handles cases where the product is in a cart and cannot be deleted immediately
+        res.status(500).json({ error: "Could not delete product (it might be in a customer's cart)" });
     }
 });
 
@@ -248,11 +270,30 @@ app.post('/api/cart/buy', authenticateToken, async(req, res) => {
 app.get('/api/orders', authenticateToken, async (req, res) => {
     const userId = req.user.id;
     try {
-        // Expect an 'orders' table with at least: id, user_id, total, created_at, metadata/json
-        const result = await pool.query('SELECT id, total, created_at, metadata FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
+        // 
+        // We select items from 'cart' where:
+        // 1. It belongs to the logged-in user (user_id = $1)
+        // 2. The status is NOT 'addedToCart' (meaning it was purchased)
+        const query = `
+            SELECT 
+                id, 
+                product_name, 
+                price, 
+                quantity, 
+                image, 
+                colour, 
+                status, 
+                transaction_id, 
+                "dateForOutForDelivery" as created_at
+            FROM cart 
+            WHERE user_id = $1 AND status != 'addedToCart' 
+            ORDER BY "dateForOutForDelivery" DESC
+        `;
+        
+        const result = await pool.query(query, [userId]);
         res.json(result.rows);
     } catch (err) {
-        console.error('Error fetching orders:', err);
+        console.error('Error fetching user orders:', err);
         res.status(500).json({ message: 'Database error' });
     }
 });
@@ -265,6 +306,7 @@ app.get('/api/admin/orders', async (req, res) => {
                 c.product_name,
                 c.quantity,
                 c.price,
+                c.colour,
                 c.status,
                 c.transaction_id,
                 c."dateForOutForDelivery" as order_date,
@@ -285,58 +327,6 @@ app.get('/api/admin/orders', async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 });
-
-// GOOGLE AUTH ROUTES
-app.get('/auth/google', 
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
-
-app.get('/auth/google/callback', 
-  passport.authenticate('google', { session: false, failureRedirect: '/login' }), 
-  (req, res) => {
-    // User is successfully authenticated and available in req.user
-    const user = req.user;
-
-    // Create JWT
-    const token = jwt.sign(
-      { id: user.id, email: user.email }, 
-      process.env.JWT_SECRET, 
-      { expiresIn: '24h' }
-    );
-
-    // Redirect to Frontend with token in query param
-    res.redirect(`http://localhost:5173/login/success?token=${token}`);
-  }
-);
-
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback" // Must match Google Console
-  },
-  async (accessToken, refreshToken, profile, done) => {
-    try {
-      // 1. Check if user exists in Neon
-      const res = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
-      
-      let user = res.rows[0];
-
-      if (user) {
-        // User exists
-        return done(null, user);
-      } else {
-        // 2. User doesn't exist, create them
-        const newRes = await pool.query(
-          'INSERT INTO users (google_id, email, name) VALUES ($1, $2, $3) RETURNING *',
-          [profile.id, profile.emails[0].value, profile.displayName]
-        );
-        return done(null, newRes.rows[0]);
-      }
-    } catch (err) {
-      return done(err, null);
-    }
-  }
-));
 
 app.put('/api/admin/orders/:id/status', async (req, res) => {
     const { id } = req.params;

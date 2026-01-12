@@ -2,51 +2,90 @@ import { useState } from "react";
 import ColourModal from "./colourSelection";
 import ProductCarousel from "./carouselPhotos";
 
-function Card({ product, onAddToCart, selectedColour, setSelectedColour }) {
-  
+function ProductCard({ product, onAddToCart }) {
+  // We keep state LOCAL to this card so one product's color doesn't affect another's
+  const [localSelectedColour, setLocalSelectedColour] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  // const {name, price, colour} = product;
+
+  // Wrapper to pass the specific color up to the parent cart logic
+  const handleAddToCartClick = () => {
+    if (localSelectedColour) {
+      // Pass the product AND the specific color chosen
+      // Note: You might need to adjust your Home.js handleAddToCart to accept this modified object
+      onAddToCart({ ...product, selectedColour: localSelectedColour });
+    }
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 w-60 hover:-translate-y-2 transition-transform">
+    <div className="group relative w-full bg-white border border-stone-100 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col">
       
-      <div className="h-40 w-full mb-4 relative rounded-md">
-         <ProductCarousel 
-          product = {product}
-         />
+      {/* --- IMAGE CAROUSEL --- */}
+      {/* Added aspect-square to ensure consistent height across grid */}
+      <div className="aspect-square w-full bg-stone-50 relative overflow-hidden">
+         <ProductCarousel product={product} />
+         
+         {/* Optional: 'New' or 'Sale' Badge could go here */}
+         {/* <span className="absolute top-3 left-3 bg-stone-900 text-white text-xs font-bold px-2 py-1 rounded-md z-10">New</span> */}
       </div>
 
-      <h2 className="text-lg font-bold mb-2">{product.name}</h2>
-      <p className="text-gray-600 mb-3">${product.price}</p>
+      {/* --- PRODUCT DETAILS --- */}
+      <div className="p-5 flex flex-col flex-grow">
+        <div className="flex justify-between items-start mb-2">
+            <h2 className="text-xl font-serif font-bold text-stone-900 leading-tight">
+                {product.name}
+            </h2>
+            <span className="text-lg font-bold text-orange-600">
+                ${product.price}
+            </span>
+        </div>
 
-      {/* Choose colour link */}
-      <button
-        onClick={() => setShowModal(true)}
-        className="w-full py-2 mb-2 rounded-md bg-purple-500 text-white hover:bg-purple-600 transition"
-      >
-        {selectedColour ? `Colour: ${selectedColour.name}` : "Choose Colour"}
-      </button>
+        {/* Description Snippet (Optional, if you have it in data) */}
+        <p className="text-sm text-stone-500 mb-4 line-clamp-2">
+            Handcrafted with premium yarn for ultimate coziness.
+        </p>
 
-      {/* Add to Cart */}
-      <button
-        disabled={!selectedColour}
-        onClick={onAddToCart}
-        className={`w-full py-2 rounded-md text-white transition
-          ${
-            selectedColour
-              ? "bg-purple-500 hover:bg-purple-600"
-              : "bg-gray-400 cursor-not-allowed"
-          }
-        `}
-      >
-        Add to Cart
-      </button>
+        <div className="mt-auto space-y-3">
+            
+            {/* --- COLOUR SELECTOR --- */}
+            <button
+                onClick={() => setShowModal(true)}
+                className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+                    localSelectedColour 
+                    ? "border-orange-200 bg-orange-50 text-orange-800" 
+                    : "border-stone-200 bg-white text-stone-600 hover:border-stone-400"
+                }`}
+            >
+                <span>{localSelectedColour ? `Color: ${localSelectedColour.name}` : "Select a Colour"}</span>
+                {/* Chevron Icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+            </button>
 
-      {/* Colour modal */}
+            {/* --- ADD TO CART --- */}
+            <button
+                disabled={!localSelectedColour}
+                onClick={handleAddToCartClick}
+                className={`w-full py-3 rounded-full font-bold flex items-center justify-center gap-2 transition-all duration-300 shadow-md ${
+                localSelectedColour
+                    ? "bg-stone-900 text-white hover:bg-orange-600 hover:shadow-orange-200"
+                    : "bg-stone-200 text-stone-400 cursor-not-allowed"
+                }`}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+                {localSelectedColour ? "Add to Cart" : "Choose Option"}
+            </button>
+        </div>
+      </div>
+
+      {/* --- COLOUR MODAL --- */}
       {showModal && (
         <ColourModal
           onClose={() => setShowModal(false)}
           onSelect={(colour) => {
-            setSelectedColour(colour);
+            setLocalSelectedColour(colour);
             setShowModal(false);
           }}
         />
@@ -55,4 +94,4 @@ function Card({ product, onAddToCart, selectedColour, setSelectedColour }) {
   );
 }
 
-export default Card;
+export default ProductCard;

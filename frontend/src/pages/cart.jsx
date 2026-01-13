@@ -6,8 +6,16 @@ import { useNavigate, Link } from 'react-router-dom';
 function Cart() {
     const [cartItems, setCartItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    
+    const [shippingCost, setShippingCost] = useState(0);
+    const [distanceKm, setDistanceKm] = useState(null);
+    const [isCalculatingShipping, setIsCalculatingShipping] = useState(true);
+    const [shippingError, setShippingError] = useState('');
+
     const { token } = useAuth();
     const navigate = useNavigate();
+
+    const STORE_COORDS = { lat: 28.6139, lng: 77.2090 }; 
 
     useEffect(() => {
         const fetchCartData = async () => {
@@ -37,6 +45,55 @@ function Cart() {
 
         fetchCartData();
     }, [token, navigate]);
+
+    useEffect(() => {
+        if (cartItems.length === 0) {
+            setIsCalculatingShipping(false);
+            return;
+        }
+
+        if (!navigator.geolocation) {
+            setShippingError("Location n/a");
+            setIsCalculatingShipping(false);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            try {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+
+                // OSRM API Call
+                const url = `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${STORE_COORDS.lng},${STORE_COORDS.lat}?overview=false`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.code === 'Ok' && data.routes.length > 0) {
+                    const meters = data.routes[0].distance;
+                    const km = (meters / 1000).toFixed(2);
+                    setDistanceKm(km);
+
+                    // --- UPDATED LOGIC HERE ---
+                    // We always set shippingCost to 0 on the invoice.
+                    // If > 5km, user pays Uber directly.
+                    setShippingCost(0); 
+                    
+                } else {
+                    setShippingError("Route error");
+                }
+            } catch (err) {
+                console.error("Shipping Calc Error:", err);
+                setShippingError("Map API Error");
+            } finally {
+                setIsCalculatingShipping(false);
+            }
+        }, (err) => {
+            setShippingError("Loc permission denied");
+            setIsCalculatingShipping(false);
+        });
+
+    }, [cartItems.length]);
 
     const updateQuantity = async (itemId, currentQuantity, change) => {
         if (!token) return;
@@ -93,8 +150,7 @@ function Cart() {
     };
 
     const subTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-    const shippingCost = subTotal > 100 ? 0 : 15; 
-    const grandTotal = subTotal + shippingCost;
+    const grandTotal = subTotal + shippingCost; 
 
     return (
         <div className='flex flex-col min-h-screen bg-stone-50 font-sans text-stone-800'>
@@ -120,6 +176,7 @@ function Cart() {
                 ) : (
                     <div className='flex flex-col lg:flex-row gap-8 items-start'>
                         
+                        {/* LEFT COLUMN: ITEMS */}
                         <div className='w-full lg:w-2/3 space-y-4'>
                             {cartItems.map((item) => (
                                 <div key={item.id} className='bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-stone-100 flex flex-col sm:flex-row gap-6 transition-all hover:shadow-md'>
@@ -127,7 +184,7 @@ function Cart() {
                                     <div className="w-full sm:w-32 h-32 flex-shrink-0 bg-stone-100 rounded-xl overflow-hidden">
                                         {item.image ? (
                                             <img 
-                                                src={item.image.startsWith('http') ? item.image : `http://localhost:5000${item.image}`} 
+                                                src={item.image.startsWith('http') ? item.image : item.image} 
                                                 alt={item.product_name} 
                                                 className='w-full h-full object-cover' 
                                             />
@@ -140,17 +197,16 @@ function Cart() {
                                         <div>
                                             <div className="flex justify-between items-start">
                                                 <h3 className='text-xl font-serif font-bold text-stone-900'>{item.product_name}</h3>
-                                                <p className='text-lg font-bold text-orange-600'>${(item.price * item.quantity).toFixed(2)}</p>
+                                                <p className='text-lg font-bold text-orange-600'>₹{(item.price * item.quantity).toFixed(2)}</p>
                                             </div>
                                             <p className='text-stone-500 text-sm mt-1'>
                                                 {item.colour ? `Colour: ${item.colour}` : 'Standard'}
                                                 <span className="mx-2">•</span> 
-                                                Unit Price: ${item.price}
+                                                Unit Price: ₹{item.price}
                                             </p>
                                         </div>
 
                                         <div className='flex justify-between items-end mt-4'>
-                                            
                                             <div className='flex items-center border border-stone-200 rounded-full bg-stone-50'>
                                                 <button 
                                                     onClick={() => updateQuantity(item.id, item.quantity, -1)} 
@@ -190,15 +246,44 @@ function Cart() {
                                 <div className="space-y-4 mb-8">
                                     <div className="flex justify-between text-stone-600">
                                         <span>Subtotal</span>
-                                        <span>${subTotal.toFixed(2)}</span>
+                                        <span>₹{subTotal.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-stone-600">
-                                        <span>Shipping Estimate</span>
-                                        <span>{shippingCost === 0 ? <span className="text-green-600 font-bold">Free</span> : `$${shippingCost.toFixed(2)}`}</span>
+                                        <span className="flex items-center gap-1">
+                                            Shipping
+                                            {distanceKm && <span className="text-xs bg-stone-100 px-2 py-0.5 rounded-full">({distanceKm}km)</span>}
+                                        </span>
+                                        
+                                        <span>
+                                            {isCalculatingShipping ? (
+                                                <span className="text-xs text-orange-500 animate-pulse">Calculating...</span>
+                                            ) : shippingError ? (
+                                                <span className="text-xs text-stone-400">Calc at checkout</span>
+                                            ) : (
+                                                // --- UPDATED DISPLAY LOGIC ---
+                                                parseFloat(distanceKm) <= 5 ? (
+                                                    <span className="text-green-600 font-bold">Free</span>
+                                                ) : (
+                                                    <span className="text-orange-600 font-bold text-sm">Pay Rider (Uber/Dunzo) / PickUp</span>
+                                                )
+                                            )}
+                                        </span>
                                     </div>
+                                    
+                                    {/* Helper Text for Shipping Logic */}
+                                    {!isCalculatingShipping && !shippingError && distanceKm && (
+                                        <div className="text-xs text-stone-400 italic text-right mt-1">
+                                            {parseFloat(distanceKm) <= 5 
+                                                ? "Within 5km: Free delivery" 
+                                                : "Distance > 5km: No shop charge. Book Uber/Dunzo & pay rider directly or have it picked up."}
+                                        </div>
+                                    )}
+
                                     <div className="border-t border-stone-200 pt-4 flex justify-between items-center">
                                         <span className="text-lg font-bold text-stone-900">Total</span>
-                                        <span className="text-2xl font-bold text-stone-900">${grandTotal.toFixed(2)}</span>
+                                        <span className="text-2xl font-bold text-stone-900">
+                                            {isCalculatingShipping ? '...' : `₹${grandTotal.toFixed(2)}`}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -210,7 +295,7 @@ function Cart() {
                                 </button>
                                 
                                 <div className="mt-6 text-center">
-                                     {/* <p className="text-xs text-stone-400">Secure Checkout powered by Stripe</p> */}
+                                    <p className="text-xs text-stone-400">Secure Checkout powered by UPI</p>
                                 </div>
                             </div>
                         </div>

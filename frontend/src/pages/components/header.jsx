@@ -39,6 +39,8 @@ function Header() {
             }
             if (res.ok) {
                 const data = await res.json();
+                // Check if data is array (if you return list) or object (if you return {count: 5})
+                // Assuming your API returns the array of items based on your previous code:
                 setCartCount(Array.isArray(data) ? data.length : 0);
             }
         } catch (err) {
@@ -61,10 +63,26 @@ function Header() {
         }
     }, [token]);
 
+    // 1. Initial Fetch on Load
     useEffect(() => {
         fetchCartCount();
         if(loggedIn) fetchOrderCount();
     }, [fetchCartCount, fetchOrderCount, loggedIn]);
+
+    // 2. NEW: Event Listener for Dynamic Updates
+    useEffect(() => {
+        // This function runs whenever the 'cartUpdated' event is dispatched
+        const handleCartUpdate = () => {
+            fetchCartCount();
+        };
+
+        window.addEventListener('cartUpdated', handleCartUpdate);
+
+        // Cleanup listener when component unmounts
+        return () => {
+            window.removeEventListener('cartUpdated', handleCartUpdate);
+        };
+    }, [fetchCartCount]);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -114,11 +132,6 @@ function Header() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                             </svg>
                         ) : null}
-                        {cartCount > 0 && (
-                            <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full shadow-md">
-                                {cartCount}
-                            </span>
-                        )}
                     </Link>
 
                     {loggedIn ? (
@@ -148,9 +161,6 @@ function Header() {
                                             {orderCount > 0 && <span className="bg-stone-200 text-stone-600 py-0.5 px-2 rounded-full text-xs font-bold">{orderCount}</span>}
                                         </Link>
                                         
-                                        {/* REMOVED SETTINGS LINK */}
-
-                                        {/* ADMIN LINK (Only visible to specific email) */}
                                         {userInfo?.email === ADMIN_EMAIL && (
                                             <Link to="/adminDashboard" className="block px-4 py-2 text-sm text-stone-600 hover:bg-orange-50 hover:text-orange-700 transition-colors">
                                                 Admin Dashboard

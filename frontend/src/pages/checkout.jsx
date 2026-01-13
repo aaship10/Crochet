@@ -51,20 +51,16 @@ const PaymentPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4 font-sans text-stone-800">
+    <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4 font-sans text-stone-800">t
       
-      {/* --- MAIN CARD --- */}
       <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-stone-100">
         
-        {/* LEFT SIDE: Visuals & QR */}
         <div className="w-full md:w-1/2 bg-stone-900 text-white p-8 md:p-12 flex flex-col items-center justify-center text-center relative overflow-hidden">
-          {/* Background decoration */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500 rounded-full blur-[100px] opacity-20 -mr-16 -mt-16"></div>
           
           <h2 className="text-3xl font-serif font-bold mb-2 relative z-10">Scan to Pay</h2>
           <p className="text-stone-400 mb-8 relative z-10">Secure Checkout via UPI</p>
           
-          {/* QR Code Container */}
           <div className="bg-white p-4 rounded-xl shadow-lg transform transition-transform hover:scale-105 duration-300 relative z-10">
             
 
@@ -92,7 +88,7 @@ const PaymentPage = () => {
                 <li>Scan the QR code on the left.</li>
                 <li>Complete the payment.</li>
                 <li><strong>Important:</strong> Copy the 12-digit Transaction ID / UTR.</li>
-                <li>Paste it below to confirm your order.</li>
+                <li>Paste it below <strong>correctly</strong> to confirm your order.</li>
             </ol>
           </div>
 

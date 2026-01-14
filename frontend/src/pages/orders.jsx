@@ -114,16 +114,14 @@ function Orders() {
             </Link>
           </div>
         ) : (
-          // --- ORDER LIST ---
           <div className="space-y-6">
             {orders.map(item => (
                 <div key={item.id} className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex flex-col md:flex-row gap-6 transition-all hover:shadow-md">
                   
-                  {/* Image Section */}
                   <div className="w-full md:w-32 h-32 bg-stone-100 rounded-lg overflow-hidden flex-shrink-0 border border-stone-100">
                       {item.image ? (
                         <img 
-                            src={item.image.startsWith('http') ? item.image : `http://localhost:5000${item.image}`} 
+                            src={item.image.startsWith('http') ? item.image : item.image} 
                             alt={item.product_name} 
                             className="w-full h-full object-cover"
                         />
@@ -132,7 +130,6 @@ function Orders() {
                       )}
                   </div>
 
-                  {/* Details Section */}
                   <div className="flex-grow flex flex-col justify-between">
                       <div>
                           <div className="flex justify-between items-start">
@@ -141,9 +138,12 @@ function Orders() {
                                 <p className="text-xs text-stone-400 mt-1 uppercase tracking-wide">
                                     Purchased: {formatDate(item.created_at)}
                                 </p>
+                                <p className="text-xs text-stone-400 mt-1 uppercase tracking-wide">
+                                    Delivered: {formatDate(item.delivery_date)} 
+                                </p>
                               </div>
                               <p className="font-serif font-bold text-lg text-stone-900">
-                                  ${(item.price * item.quantity).toFixed(2)}
+                                  ₹{(item.price * item.quantity).toFixed(2)}
                               </p>
                           </div>
                           
@@ -154,7 +154,6 @@ function Orders() {
                       </div>
 
                       <div className="mt-4 flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-stone-100">
-                           {/* Status Badge */}
                            <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${getStatusStyle(item.status)}`}>
                                 {getStatusLabel(item.status)}
                            </div>

@@ -10,7 +10,6 @@ const PaymentPage = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
 
-  // Fake UPI QR Code for demo
   const qrCodeUrl = img1;
 
   const handlePayment = async (e) => {
@@ -24,7 +23,6 @@ const PaymentPage = () => {
     setLoading(true);
 
     try {
-      // Call the backend to finalize the order
       const response = await fetch('http://localhost:5000/api/cart/buy', {
         method: 'POST',
         headers: {
@@ -37,7 +35,7 @@ const PaymentPage = () => {
       if (response.ok) {
         setShowModal(true);
         setTimeout(() => {
-          navigate('/orders'); // Redirects to Orders page usually makes more sense than home
+          navigate('/orders'); 
         }, 3000);
       } else {
         alert("Payment verification failed. Please check the ID and try again.");
@@ -51,7 +49,7 @@ const PaymentPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4 font-sans text-stone-800">t
+    <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4 font-sans text-stone-800">
       
       <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-stone-100">
         

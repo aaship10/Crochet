@@ -13,7 +13,18 @@ import  { AuthProvider } from './pages/AuthProvider'
 import Checkout from './pages/checkout'
 import AdminDashboard from './pages/AdminDashboard'
 import PaymentPage from './pages/checkout'
+import { useEffect, useState } from 'react';
 function App() {
+
+  const [storeCoords, setStoreCoords] = useState(null);
+  
+  useEffect(() => {
+      fetch('http://localhost:5000/api/store/location')
+          .then(res => res.json())
+          .then(data => setStoreCoords(data))
+          .catch(console.error);
+  }, []);
+
   return (
     <AuthProvider>
       <Header  />
@@ -23,7 +34,9 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/faq" element={<Faq />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/cart" element={<Cart />} />
+        <Route path="/cart" element={storeCoords ? ( <Cart lati={storeCoords.lat} longi={storeCoords.lng} /> ) : ( <div className="p-10 text-center">Loading store location...</div> )}
+        />
+
         <Route path="/orders" element={<Orders />} />
         <Route path='/checkout' element={<Checkout />} />
         <Route path='/adminDashboard' element={<AdminDashboard />} />

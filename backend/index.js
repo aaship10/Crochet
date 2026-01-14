@@ -4,7 +4,6 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const passport = require('passport');
 const multer = require('multer'); 
 const path = require('path');
 const SECRET_KEY = process.env.SECRET_KEY;
@@ -100,7 +99,8 @@ app.post('/auth/login', async (req, res) => {
         res.json({ message: "Login successful", token, user:{
             id: user.id,
             name: user.name,
-            email: user.email
+            email: user.email,
+            address: user.address
         } });
     } catch (err) {
         console.error(err);
@@ -196,6 +196,30 @@ app.get('/api/cart', authenticateToken, async(req, res) => {
     }
 });
 
+// Update Cart Distance
+app.put('/api/cart/distance', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    const { distance } = req.body;
+
+    if (distance === undefined || distance === null) {
+        return res.status(400).json({ error: "Distance is required" });
+    }
+
+    try {
+        await pool.query(
+            `UPDATE cart 
+             SET distance = $1 
+             WHERE user_id = $2 AND "cartStatus" = TRUE`,
+            [distance, userId]
+        );
+
+        res.json({ message: "Delivery distance updated successfully" });
+    } catch (err) {
+        console.error("Error updating distance:", err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
 // 3. Update Cart Quantity (NEW)
 app.put('/api/cart/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
@@ -249,31 +273,42 @@ app.delete('/api/cart/:id', authenticateToken, async (req, res) => {
 
 app.post('/api/cart/buy', authenticateToken, async(req, res) => {
     const userId = req.user.id;
+    const { transactionId } = req.body; 
+
+    console.log("Processing buy for User:", userId, "Transaction ID:", transactionId);
+
     try {
-        // CHANGED: Status starts as 'paymentPending' instead of 'outForDelivery'
         await pool.query(
             `UPDATE cart 
-             SET status = $1, "cartStatus" = $2, "dateForOutForDelivery" = NOW() 
-             WHERE user_id = $3 AND "cartStatus" = TRUE`, 
-            ['paymentPending', false, userId]
+             SET 
+                status = $1, 
+                "cartStatus" = $2, 
+                "dateForOutForDelivery" = NOW(),
+                transaction_id = $3
+             WHERE user_id = $4 AND "cartStatus" = TRUE`, 
+            ['paymentPending', false, transactionId, userId]
         );
 
         return res.status(200).json({message: 'Order placed successfully!'});
     }
     catch (err) {
-        console.error(err);
+        console.error("Buy API Error:", err);
         res.status(500).json({error: 'Database error'});
     }
 });
+
+app.get('/api/store/location', (req, res) => {
+    res.json({
+        lat: Number(process.env.LAT),
+        lng: Number(process.env.LONG)
+    });
+});
+
 
 // 5. Get Order History for logged-in user
 app.get('/api/orders', authenticateToken, async (req, res) => {
     const userId = req.user.id;
     try {
-        // 
-        // We select items from 'cart' where:
-        // 1. It belongs to the logged-in user (user_id = $1)
-        // 2. The status is NOT 'addedToCart' (meaning it was purchased)
         const query = `
             SELECT 
                 id, 
@@ -284,7 +319,8 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
                 colour, 
                 status, 
                 transaction_id, 
-                "dateForOutForDelivery" as created_at
+                "dateForOutForDelivery" as created_at,
+                "dateOfDelivery" as delivery_date
             FROM cart 
             WHERE user_id = $1 AND status != 'addedToCart' 
             ORDER BY "dateForOutForDelivery" DESC
@@ -336,12 +372,10 @@ app.put('/api/admin/orders/:id/status', async (req, res) => {
         let query;
         let params;
 
-        // If setting to 'delivered', also save the timestamp
         if (status === 'delivered') {
             query = 'UPDATE cart SET status = $1, "dateOfDelivery" = NOW() WHERE id = $2 RETURNING *';
             params = [status, id];
         } else {
-            // Otherwise just update the status
             query = 'UPDATE cart SET status = $1 WHERE id = $2 RETURNING *';
             params = [status, id];
         }

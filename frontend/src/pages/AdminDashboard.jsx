@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useAuth } from './useAuth'; // Security Fix: Import auth hook
+import { useAuth } from './useAuth';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('orders');
@@ -52,7 +52,6 @@ const AdminDashboard = () => {
   );
 };
 
-// --- COMPONENT: ORDER LIST ---
 const OrderList = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -124,7 +123,8 @@ const OrderList = () => {
               <th className="px-6 py-4">Date</th>
               <th className="px-6 py-4">Customer</th>
               <th className="px-6 py-4">Item Details</th>
-              {/* <th className='px-6 py-4'>Location</th> */}
+              <th className='px-6 py-4'>Location</th>
+              <th className='px-6 py-4'>Address</th>
               <th className="px-6 py-4">Txn ID</th>
               <th className="px-6 py-4">Workflow</th>
               <th className="px-6 py-4">Status</th>
@@ -156,9 +156,13 @@ const OrderList = () => {
                   )}
                 </td>
 
-                {/* <td className="px-6 py-4">
-                  <div className="text-sm text-stone-800 font-medium">{item.distance}</div>
-                </td> */}
+                <td className="px-6 py-4">
+                  <div className="text-sm text-stone-800 font-medium">{item.distance}km</div>
+                </td>
+
+                <td className="px-6 py-4">
+                  <div className="text-sm text-stone-800 font-medium">{item.user_address}</div>
+                </td>
 
                 <td className="px-6 py-4">
                   <div className={`text-xs font-mono px-2 py-1 rounded w-fit select-all ${item.transaction_id ? 'bg-stone-100 text-stone-700' : 'bg-red-100 text-red-600'}`}>
@@ -231,7 +235,6 @@ const OrderList = () => {
   );
 };
 
-// --- COMPONENT: PRODUCTS MANAGER ---
 const ProductsManager = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -257,7 +260,6 @@ const ProductsManager = () => {
   );
 };
 
-// --- COMPONENT: ADD PRODUCT FORM ---
 const AddProductForm = ({ onProductAdded }) => {
   const [productData, setProductData] = useState({ name: '', price: '' });
   const [files, setFiles] = useState([null, null, null, null]);
@@ -374,7 +376,6 @@ const AddProductForm = ({ onProductAdded }) => {
   );
 };
 
-// --- COMPONENT: PRODUCT INVENTORY ---
 const ProductInventory = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);

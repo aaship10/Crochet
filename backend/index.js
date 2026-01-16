@@ -338,7 +338,10 @@ app.get('/api/admin/orders', async (req, res) => {
                 c.transaction_id,
                 c."dateForOutForDelivery" as order_date,
                 c."dateOfDelivery",
-                u.name as user_name
+                u.phone as user_phone,
+                u.name as user_name,
+                c.distance,
+                u.address as user_address
             FROM cart c
             JOIN users u ON c.user_id = u.id
             WHERE c.status != 'addedToCart' -- Show everything except active shopping carts

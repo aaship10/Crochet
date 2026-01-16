@@ -12,22 +12,31 @@ import Header from './pages/components/header'
 import  { AuthProvider } from './pages/AuthProvider'
 import Checkout from './pages/checkout'
 import AdminDashboard from './pages/AdminDashboard'
-import PaymentPage from './pages/checkout'
+// import PaymentPage from './pages/checkout'
 import { useEffect, useState } from 'react';
 function App() {
 
   const [storeCoords, setStoreCoords] = useState(null);
+  const [adminEmail, setAdminEmail] = useState(null);
   
   useEffect(() => {
       fetch('http://localhost:5000/api/store/location')
           .then(res => res.json())
-          .then(data => setStoreCoords(data))
+          .then(data => setAdminEmail(data))
           .catch(console.error);
+  }, []);
+
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/email')
+      .then(res => res.json())
+      .then(data => setStoreCoords(data))
+      .catch(console.error);
   }, []);
 
   return (
     <AuthProvider>
-      <Header  />
+      <Header adminEmail={adminEmail?.AdminEmail} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/product" element={<Product />} />
@@ -40,7 +49,7 @@ function App() {
         <Route path="/orders" element={<Orders />} />
         <Route path='/checkout' element={<Checkout />} />
         <Route path='/adminDashboard' element={<AdminDashboard />} />
-        <Route path='/checkout' element={<PaymentPage />} />
+        {/* <Route path='/checkout' element={<PaymentPage />} /> */}
       </Routes>
     </AuthProvider>
   )

@@ -2,11 +2,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../useAuth';
 
-function Header() {
+function Header({adminEmail}) {
     const location = useLocation();
     const navigate = useNavigate();
     const { user: loggedIn, logout, userInfo, token } = useAuth();
-    const ADMIN_EMAIL = "aashita@gmail.com"; 
+    const ADMIN_EMAIL = adminEmail; 
     
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

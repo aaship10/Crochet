@@ -12,23 +12,39 @@ function Faq() {
   const faqData = [
     {
       question: "What materials are used in your crochet products?",
-      answer: "We care deeply about quality and sustainability. We primarily use high-quality organic cotton for wearables to ensure breathability, and premium acrylic blends for plushies to ensure durability and ease of washing. Specific material details are listed on every product page."
+      answer: "We care deeply about quality and sustainability. We primarily use high-quality organic cotton for wearables to ensure breathability, and premium acrylic blends for plushies to ensure durability and ease of washing."
     },
     {
       question: "Do you offer custom crochet orders?",
-      answer: "Yes, we love bringing your ideas to life! Whether it's a specific color palette for a blanket or a custom plushie character, we accept a limited number of custom commissions each month. Please use our Contact page to inquire."
+      answer: "Yes, we love bringing your ideas to life! Whether it's a specific color palette or a custom keychain. Feel free to reach out to us with your ideas by messaging us on +919850881616."
     },
     {
       question: "What is your return policy?",
-      answer: "We want you to love your handmade item. We offer a 30-day return policy on non-custom items. Products must be in their original, unused condition. Please note that custom/personalized orders are final sale unless there is a defect."
+      answer: "There is no return policy. If it is being delivered by us we will take utmost care of it. If it is delivered by uber or being picked up we have no control over it once it leaves our hands."
     },
     {
       question: "How long does shipping take?",
-      answer: "Since many of our items are made to order, please allow 3-5 days for production. Once shipped, domestic delivery typically takes 5-7 business days. You will receive a tracking number as soon as your package is on its way."
+      answer: "Please allow 3-5 days for production. Once shipped, delivery typically takes 2-3 business days. You will be updated by the updates on the Orders page."
     },
     {
-      question: "How do I care for my crochet items?",
-      answer: "To keep your items looking their best, we recommend hand washing in cold water with mild detergent and laying them flat to dry. Avoid wringing or twisting the fabric to maintain its shape."
+      question: "When is delivery free?",
+      answer: "Delivery is free for all orders which are in a range of 5km from our workshop. You can check the distance between the workshop and your address on the checkout page."
+    },
+    {
+      question: "What will happen if I enter the wrong transaction Id?",
+      answer: "To keep things simple, we will not be able to verify your order and it will be cancelled. You can place a new order with the correct transaction Id."
+    },
+    {
+      question: "How can I contact customer support?",
+      answer: "You can reach our customer support team by messaging us on the number +919850881616. We aim to respond within 24-48 hours."
+    },
+    {
+      question: "How will I know the status of my order?",
+      answer: "You will receive updates on your order status on the Orders page."
+    },
+    {
+      question: "How will I get my order if I live far away?",
+      answer: "We deliver to all locations within a 5km radius of our workshop. For orders beyond this range, we will contact you via whatsapp. You will have to pick it up from our workshop or get it delivered via a courier service at an additional cost."
     }
   ];
 
@@ -88,7 +104,7 @@ function Faq() {
           </div>
         </div>
 
-        <div className="bg-orange-50 py-16 text-center">
+        {/* <div className="bg-orange-50 py-16 text-center">
            <div className="container mx-auto px-4">
              <h3 className="text-2xl font-serif font-bold text-stone-900 mb-4">Still have questions?</h3>
              <p className="text-stone-600 mb-8">Can't find the answer you're looking for? Please chat to our friendly team.</p>
@@ -99,7 +115,7 @@ function Faq() {
                Get in Touch
              </Link>
            </div>
-        </div>
+        </div> */}
 
       </main>
       <Footer />

@@ -124,6 +124,7 @@ const OrderList = () => {
               <th className="px-6 py-4">Date</th>
               <th className="px-6 py-4">Customer</th>
               <th className="px-6 py-4">Item Details</th>
+              {/* <th className='px-6 py-4'>Location</th> */}
               <th className="px-6 py-4">Txn ID</th>
               <th className="px-6 py-4">Workflow</th>
               <th className="px-6 py-4">Status</th>
@@ -140,13 +141,13 @@ const OrderList = () => {
 
                 <td className="px-6 py-4">
                   <div className="text-sm font-bold text-stone-900">{item.user_name}</div>
-                  <div className="text-xs text-stone-400">{item.user_email || 'No email'}</div>
+                  <div className="text-xs text-stone-400">{item.user_phone || 'No phone'}</div>
                 </td>
 
                 <td className="px-6 py-4">
                   <div className="text-sm text-stone-800 font-medium">{item.product_name}</div>
                   <div className="text-xs text-stone-500 mt-1">
-                    Qty: {item.quantity} • <span className="text-stone-900 font-bold">${item.price}</span>
+                    Qty: {item.quantity} • <span className="text-stone-900 font-bold">₹{item.price}</span>
                   </div>
                   {item.colour && (
                      <div className="mt-1 inline-block px-2 py-0.5 bg-stone-100 rounded text-[10px] text-stone-600 border border-stone-200">
@@ -154,6 +155,10 @@ const OrderList = () => {
                      </div>
                   )}
                 </td>
+
+                {/* <td className="px-6 py-4">
+                  <div className="text-sm text-stone-800 font-medium">{item.distance}</div>
+                </td> */}
 
                 <td className="px-6 py-4">
                   <div className={`text-xs font-mono px-2 py-1 rounded w-fit select-all ${item.transaction_id ? 'bg-stone-100 text-stone-700' : 'bg-red-100 text-red-600'}`}>

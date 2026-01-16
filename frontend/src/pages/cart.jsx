@@ -48,7 +48,6 @@ function Cart({lati, longi}) {
 
     // 2. Calculate Distance (UPDATED: Uses Live Geolocation)
     useEffect(() => {
-        // Wait for cart items to load before calculating
         if (hasCalculatedRef.current || cartItems.length === 0) return;
 
         hasCalculatedRef.current = true;
@@ -76,10 +75,8 @@ function Cart({lati, longi}) {
                 const userLat = position.coords.latitude;
                 const userLng = position.coords.longitude;
 
-                // Optional: Update UI to show we found them (or reverse geocode here if you need the address name)
                 setDeliveryAddress("Current Location"); 
 
-                // B. Route via OSRM (User Coords -> Store Coords)
                 const routeRes = await fetch(
                     `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${STORE_COORDS.lng},${STORE_COORDS.lat}?overview=false`,
                     { signal: controller.signal }
@@ -95,7 +92,6 @@ function Cart({lati, longi}) {
             } catch (err) {
                 if (err.name !== 'AbortError') {
                     console.error("Location Error:", err);
-                    // Handle permission denied or timeout
                     if (err.code === 1) {
                         setShippingError('Location permission denied');
                     } else {
@@ -110,9 +106,8 @@ function Cart({lati, longi}) {
         calculateDistance();
 
         return () => controller.abort();
-    }, [cartItems.length]); // Removed 'user' dependency as we rely on browser API
+    }, [cartItems.length]); 
 
-    // ... (Rest of your functions: updateQuantity, removeItem, proceedToCheckout stay exactly the same)
     const updateQuantity = async (itemId, currentQuantity, change) => {
         if (!token) return;
         const newQuantity = currentQuantity + change;

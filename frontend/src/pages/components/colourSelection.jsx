@@ -1,22 +1,25 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import img1 from "/p1-1.jpeg"; // Ensure this path matches your project structure
+import img1 from "/purple.JPG";
+import img2 from "/pink.JPG";
+import img3 from "/blue.JPG";
+import img4 from "/yellow.jpeg";
+import img5 from "/beige.JPG";
+import img6 from "/green.JPG";
 
 function ColourModal({ onClose, onSelect }) {
     
-    // Hardcoded data (In a real app, this might come from props)
     const colours = [
-        { id: 1, name: "Ruby Red", hex: "#EF4444", image: img1 },
-        { id: 2, name: "Ocean Blue", hex: "#3B82F6", image: img1 },
-        { id: 3, name: "Forest Green", hex: "#10B981", image: img1 },
-        { id: 4, name: "Sunny Yellow", hex: "#F59E0B", image: img1 },
-        { id: 5, name: "Lavender", hex: "#8B5CF6", image: img1 },
-        { id: 6, name: "Charcoal", hex: "#374151", image: img1 },
+        { id: 1, name: "Ruby Red", hex: "#8E4DFF", image: img1 },
+        { id: 2, name: "Ocean Blue", hex: "#005A73", image: img3 },
+        { id: 3, name: "Forest Green", hex: "#34D98A", image: img6 },
+        { id: 4, name: "Sunny Yellow", hex: "#F59E0B", image: img4 },
+        { id: 5, name: "Lavender", hex: "#D955BB", image: img2 },
+        { id: 6, name: "Charcoal", hex: "#B7A076", image: img5 },
     ];
 
     const [selectedColour, setSelectedColour] = useState(null);
 
-    // Lock body scroll when modal is open
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => {

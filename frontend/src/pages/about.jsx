@@ -1,6 +1,6 @@
 import Footer from './components/footer';
 import { Link } from 'react-router-dom';
-import img1 from '/p1-1.jpeg';
+import img1 from '/aboutphoto.jpeg';
 
 function About() {
   return (
@@ -43,7 +43,7 @@ function About() {
                             We are passionate about creating beautiful, handcrafted crochet items that bring joy and warmth to your life. In a world of fast fashion, we believe in the beauty of slowing down.
                         </p>
                         <p className="text-lg text-stone-600 leading-relaxed">
-                            Each piece is made with love and attention to detail, ensuring the highest quality for our customers. Whether you're looking for a cozy blanket, a stylish accessory, or a unique gift, we have something special for everyone.
+                            Each piece is made with love and attention to detail, ensuring the highest quality for our customers. Whether you're looking for a simple keychain, a stylish accessory, or a unique gift, we have something special for everyone.
                         </p>
                         <div className="pt-4">
                             <p className="font-serif italic text-xl text-stone-800 border-l-4 border-orange-400 pl-4">

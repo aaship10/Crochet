@@ -10,7 +10,6 @@ const SECRET_KEY = process.env.SECRET_KEY;
 
 const app = express();
 const port = process.env.PORT || 5000;
-
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -301,6 +300,12 @@ app.get('/api/store/location', (req, res) => {
     res.json({
         lat: Number(process.env.LAT),
         lng: Number(process.env.LONG)
+    });
+});
+
+app.get('/api/email', (req, res) => {
+    res.json({
+        AdminEmail: process.env.ADMIN_EMAIL
     });
 });
 

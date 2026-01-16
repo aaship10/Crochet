@@ -2,11 +2,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../useAuth';
 
-function Header({adminEmail}) {
+function Header() {
     const location = useLocation();
     const navigate = useNavigate();
     const { user: loggedIn, logout, userInfo, token } = useAuth();
-    const ADMIN_EMAIL = adminEmail; 
+    const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL; 
     
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -160,7 +160,6 @@ function Header({adminEmail}) {
                                             <span>My Orders</span>
                                             {orderCount > 0 && <span className="bg-stone-200 text-stone-600 py-0.5 px-2 rounded-full text-xs font-bold">{orderCount}</span>}
                                         </Link>
-                                        
                                         {userInfo?.email === ADMIN_EMAIL && (
                                             <Link to="/adminDashboard" className="block px-4 py-2 text-sm text-stone-600 hover:bg-orange-50 hover:text-orange-700 transition-colors">
                                                 Admin Dashboard

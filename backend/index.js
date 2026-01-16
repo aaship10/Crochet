@@ -296,20 +296,6 @@ app.post('/api/cart/buy', authenticateToken, async(req, res) => {
     }
 });
 
-app.get('/api/store/location', (req, res) => {
-    res.json({
-        lat: Number(process.env.LAT),
-        lng: Number(process.env.LONG)
-    });
-});
-
-app.get('/api/email', (req, res) => {
-    res.json({
-        AdminEmail: process.env.ADMIN_EMAIL
-    });
-});
-
-
 // 5. Get Order History for logged-in user
 app.get('/api/orders', authenticateToken, async (req, res) => {
     const userId = req.user.id;

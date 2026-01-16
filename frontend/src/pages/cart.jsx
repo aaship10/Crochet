@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 
-function Cart({lati, longi}) {
+function Cart() {
     const [cartItems, setCartItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     
@@ -17,7 +17,7 @@ function Cart({lati, longi}) {
     const { token } = useAuth();
     const navigate = useNavigate();
 
-    const STORE_COORDS = { lat: lati, lng: longi };
+    const STORE_COORDS = { lat: parseFloat(import.meta.env.VITE_STORE_LAT), lng: parseFloat(import.meta.env.VITE_STORE_LONG), };
 
     // 1. Fetch Cart Data
     useEffect(() => {
@@ -223,6 +223,7 @@ function Cart({lati, longi}) {
                                                 Shipping
                                                 {distanceKm && <span className="text-xs bg-stone-100 px-2 py-0.5 rounded-full">({distanceKm}km)</span>}
                                             </span>
+                                            <span className="text-[11px] text-stone-400 mt-1">Please ensure the delivery location is same as the location you are at right now so as to get accurate address</span>
                                             {shippingError && <span className="text-[10px] text-red-400">{shippingError}</span>}
                                         </div>
                                         <span>
@@ -246,18 +247,29 @@ function Cart({lati, longi}) {
 
                                 <button 
                                     onClick={proceedToCheckout} 
-                                    disabled={isCalculatingShipping} 
+                                    disabled={isCalculatingShipping || shippingError || !distanceKm} 
                                     className={`w-full py-4 rounded-full font-bold text-lg shadow-lg transition-colors
-                                        ${isCalculatingShipping
+                                        ${(isCalculatingShipping || shippingError || !distanceKm)
                                             ? 'bg-stone-300 text-stone-500 cursor-not-allowed' 
                                             : 'bg-stone-900 text-white hover:bg-orange-600'
                                         }`}
                                 >
                                     {isCalculatingShipping 
                                         ? 'Locating You...' 
+                                        : shippingError
+                                        ? 'Error - Try Again'
+                                        : !distanceKm
+                                        ? 'Fetching Location...'
                                         : 'Proceed to Checkout'
                                     }
                                 </button>
+                                
+                                {shippingError && (
+                                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                        <p className="text-xs text-red-600 font-medium">Location Error</p>
+                                        <p className="text-xs text-red-500 mt-1">Please try again later. If the issue persists, please contact us.</p>
+                                    </div>
+                                )}
                                 
                                 <div className="mt-6 text-center">
                                     <p className="text-xs text-stone-400">Secure Checkout powered by UPI</p>

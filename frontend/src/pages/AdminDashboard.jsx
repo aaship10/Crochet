@@ -59,7 +59,7 @@ const OrderList = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/admin/orders', {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/orders`, {
         headers: { Authorization: `Bearer ${token}` } // Fix: Attach Token
       });
       // Sort by newest first
@@ -79,7 +79,7 @@ const OrderList = () => {
   const handleStatusUpdate = async (orderId, status) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/admin/orders/${orderId}/status`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/orders/${orderId}/status`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } } // Fix: Attach Token
       );
@@ -123,7 +123,7 @@ const OrderList = () => {
               <th className="px-6 py-4">Date</th>
               <th className="px-6 py-4">Customer</th>
               <th className="px-6 py-4">Item Details</th>
-              <th className='px-6 py-4'>Location</th>
+              <th className='px-6 py-4'>Distance</th>
               <th className='px-6 py-4'>Address</th>
               <th className="px-6 py-4">Txn ID</th>
               <th className="px-6 py-4">Workflow</th>
@@ -295,7 +295,7 @@ const AddProductForm = ({ onProductAdded }) => {
     });
 
     try {
-      await axios.post('http://localhost:5000/api/products', formData, {
+      await axios.post(`${import.meta.env.REACT_APP_API_URL}/api/products`, formData, {
         headers: { 
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`
@@ -383,7 +383,7 @@ const ProductInventory = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/products');
+      const res = await axios.get(`${import.meta.env.REACT_APP_API_URL}/api/products`);
       setProducts(res.data);
     } catch (err) {
       console.error("Error fetching products", err);
@@ -399,7 +399,7 @@ const ProductInventory = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/products/${id}`, {
+      await axios.delete(`${import.meta.env.REACT_APP_API_URL}/api/products/${id}`, {
          headers: { Authorization: `Bearer ${token}` }
       });
       setProducts(products.filter(p => p.id !== id));

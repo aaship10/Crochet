@@ -55,7 +55,7 @@ function Orders() {
       }
 
       try {
-        const res = await fetch('http://localhost:5000/api/orders', {
+        const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/orders`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 

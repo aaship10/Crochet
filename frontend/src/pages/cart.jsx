@@ -28,7 +28,7 @@ function Cart() {
                 return;
             }
             try {
-                const res = await fetch('http://localhost:5000/api/cart', {
+                const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/cart`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res.status === 401) {
@@ -115,7 +115,7 @@ function Cart() {
         const originalItems = [...cartItems];
         setCartItems(prevItems => prevItems.map(item => item.id === itemId ? { ...item, quantity: newQuantity } : item));
         try {
-            await fetch(`http://localhost:5000/api/cart/${itemId}`, {
+            await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/cart/${itemId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ quantity: newQuantity })
@@ -128,7 +128,7 @@ function Cart() {
         const originalItems = [...cartItems];
         setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
         try {
-            await fetch(`http://localhost:5000/api/cart/${itemId}`, {
+            await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/cart/${itemId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -140,7 +140,7 @@ function Cart() {
 
         if (distanceKm) {
             try {
-                await fetch('http://localhost:5000/api/cart/distance', {
+                await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/cart/distance`, {
                     method: 'PUT',
                     headers: { 
                         'Content-Type': 'application/json', 

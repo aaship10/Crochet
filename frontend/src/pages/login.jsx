@@ -31,43 +31,51 @@ function AuthPage() {
 
     const endpoint = isLogin ? '/auth/login' : '/auth/register';
 
-    try {
-      // Construct Payload
-      const payload = isLogin ? {
-            email: formData.email,
-            password: formData.password
-        } : {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,      // Added Phone
-            address: formData.address,  // Added Address
-            password: formData.password
+  try {
+    // Build request payload
+    const payload = isLogin
+      ? { email: formData.email, password: formData.password }
+      : {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          password: formData.password,
         };
 
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
 
-      const data = await response.json();
-      
-      if (response.ok) {
-        if (isLogin) {
-            login(data.token, data.user);
-            navigate('/product'); 
-        } else {
-            alert('Registration Successful! Please login.');
-            setIsLogin(true);
-            // Optional: Clear form or keep email pre-filled
-        }
-      } else {
-        alert(data.error || data.message || 'Something went wrong');
-      }
-    } catch (err) {
-      console.error('Error:', err);
+    // Safe parsing: check content-type first
+    let data;
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = { message: await response.text() };
     }
-  };
+
+    // Handle success or error
+    if (response.ok) {
+      if (isLogin) {
+        login(data.token, data.user); // Save token in auth context
+        navigate('/product');
+      } else {
+        alert('Registration successful! Please login.');
+        setIsLogin(true); // switch to login form
+      }
+    } else {
+      alert(data.error || data.message || 'Something went wrong.');
+    }
+  } catch (err) {
+    console.error('Network or parsing error:', err);
+    alert('An unexpected error occurred. Please try again later.');
+  }
+};
+
   
   return (
     <div className='flex flex-col min-h-screen bg-stone-50 font-sans text-stone-800'>

@@ -8,14 +8,13 @@ const ProductCarousel = ({ product }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Ensure we have 4 images, fallback to empty string if missing
   console.log(product.images);
   const slides = [
     product.images?.[0] || product.image_url,
     product.images?.[1] || img2,
     product.images?.[2] || img3,
     product.images?.[3] || img4,
-  ].filter(Boolean); // Already cleaned
+  ].filter(Boolean); 
 
   const nextSlide = () => {
     setCurrentIndex((prevIndex) => (prevIndex === slides.length - 1 ? 0 : prevIndex + 1));
@@ -31,7 +30,7 @@ const ProductCarousel = ({ product }) => {
     return () => clearInterval(interval);
   }, [isPaused, slides.length]);
 
-  if (!slides.length) return null; // No images to show
+  if (!slides.length) return null;
 
   return (
     <div

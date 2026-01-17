@@ -30,7 +30,7 @@ function Header() {
             return;
         }
         try {
-            const res = await fetch('http://localhost:5000/api/cart', {
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/cart`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.status === 401) {
@@ -39,8 +39,6 @@ function Header() {
             }
             if (res.ok) {
                 const data = await res.json();
-                // Check if data is array (if you return list) or object (if you return {count: 5})
-                // Assuming your API returns the array of items based on your previous code:
                 setCartCount(Array.isArray(data) ? data.length : 0);
             }
         } catch (err) {
@@ -51,7 +49,7 @@ function Header() {
     const fetchOrderCount = useCallback(async () => {
         if (!token) return;
         try {
-            const res = await fetch('http://localhost:5000/api/orders', {
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/orders`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {

@@ -49,6 +49,8 @@ function Faq() {
   ];
 
   return (
+    <>
+    <title>FAQ</title>
     <div className="flex flex-col min-h-screen bg-stone-50 text-stone-800 font-sans">
       <main className="flex-grow">
         
@@ -120,6 +122,7 @@ function Faq() {
       </main>
       <Footer />
     </div>
+    </>
   );
 }
 

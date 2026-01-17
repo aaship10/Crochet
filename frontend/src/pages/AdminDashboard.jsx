@@ -6,6 +6,8 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('orders');
 
   return (
+    <>
+    <title>Admin Dashboard</title>
     <div className="min-h-screen bg-stone-50 font-sans text-stone-800 p-6 md:p-12">
       <div className="max-w-7xl mx-auto">
         
@@ -49,6 +51,7 @@ const AdminDashboard = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

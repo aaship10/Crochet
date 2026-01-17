@@ -159,6 +159,8 @@ function Cart() {
     const grandTotal = subTotal; 
 
     return (
+        <>
+        <title>Cart</title>
         <div className='flex flex-col min-h-screen bg-stone-50 font-sans text-stone-800'>
             <main className='flex-grow container mx-auto px-4 py-12'>
                 <h1 className="text-4xl font-serif font-bold text-stone-900 mb-8">Shopping Cart</h1>
@@ -281,6 +283,7 @@ function Cart() {
             </main>
             <Footer />
         </div>
+        </>
     );
 }
 

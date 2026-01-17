@@ -78,6 +78,8 @@ function AuthPage() {
 
   
   return (
+    <>
+    <title>Register</title>
     <div className='flex flex-col min-h-screen bg-stone-50 font-sans text-stone-800'>
       <main className='flex-grow flex flex-col justify-center items-center py-12 px-4'>
         
@@ -229,6 +231,7 @@ function AuthPage() {
       </main>
       <Footer />
     </div>
+    </>
   );
 }
 

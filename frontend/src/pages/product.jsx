@@ -65,6 +65,8 @@ function Product() {
   };
 
   return (
+    <>
+    <title>Shop</title>
     <div className="flex flex-col min-h-screen bg-stone-50 font-sans text-stone-800">
       
       <section className="bg-white py-12 border-b border-stone-200">
@@ -108,6 +110,7 @@ function Product() {
       
       <Footer />
     </div>
+    </>
   );
 }
 

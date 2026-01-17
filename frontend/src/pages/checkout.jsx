@@ -49,6 +49,8 @@ const PaymentPage = () => {
   };
 
   return (
+    <>
+    <title>Checkout</title>
     <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4 font-sans text-stone-800">
       
       <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-stone-100">
@@ -156,6 +158,7 @@ const PaymentPage = () => {
       )}
 
     </div>
+    </>
   );
 };
 

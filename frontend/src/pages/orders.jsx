@@ -79,6 +79,8 @@ function Orders() {
   }, [token, navigate]);
 
   return (
+    <>
+    <title>Orders</title>
     <div className="flex flex-col min-h-screen bg-stone-50 font-sans text-stone-800">
       
       {/* --- HEADER --- */}
@@ -170,6 +172,7 @@ function Orders() {
       </main>
       <Footer />
     </div>
+    </>
   );
 }
 

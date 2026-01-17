@@ -6,6 +6,8 @@ import img1 from '/homephoto.jpeg';
 
 function Home() {
   return (
+    <>
+    <title>Home</title>
     <div className="flex flex-col min-h-screen bg-stone-50 font-sans text-stone-800">
       <main className="flex-grow">
         
@@ -108,6 +110,7 @@ function Home() {
       </main>
       <Footer />
     </div>
+    </>
   );
 }
 

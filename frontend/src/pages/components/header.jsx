@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../useAuth';
-
+import logo from '/logo.png';
 function Header() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -98,9 +98,10 @@ function Header() {
             <div className="container mx-auto px-4 h-20 flex items-center justify-between">
                 
                 <Link to="/" className="flex items-center gap-2 group">
-                    <span className="text-2xl font-serif font-bold text-stone-800 tracking-tight group-hover:text-orange-600 transition-colors">
-                        Crochet<span className="text-orange-500">.</span>
-                    </span>
+                    <img src={logo} className='h-14 w-40 rounded-md' />
+                    {/* <span className="text-2xl font-serif font-bold text-stone-800 tracking-tight group-hover:text-orange-600 transition-colors">
+                        ThreadedThings<span className="text-orange-500">.</span>
+                    </span> */}
                 </Link>
 
                 <nav className="hidden md:flex items-center gap-8">

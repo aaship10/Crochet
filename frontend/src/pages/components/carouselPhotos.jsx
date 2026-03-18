@@ -8,7 +8,7 @@ const ProductCarousel = ({ product }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  console.log(product.images);
+  // console.log(product.images);
   const slides = [
     product.images?.[0] || product.image_url,
     product.images?.[1] || img2,

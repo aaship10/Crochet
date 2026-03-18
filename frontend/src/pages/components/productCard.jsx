@@ -29,9 +29,9 @@ function ProductCard({ product, onAddToCart }) {
             </span>
         </div>
 
-        <p className="text-sm text-stone-500 mb-4 line-clamp-2">
-            Handcrafted with premium yarn for ultimate coziness.
-        </p>
+        {/* <p className="text-sm text-stone-500 mb-4 line-clamp-2">
+            {product.description}
+        </p> */}
 
         <div className="mt-auto space-y-3">
             

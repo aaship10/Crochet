@@ -47,7 +47,7 @@ function Product() {
           name: productWithVariant.name,
           price: productWithVariant.price,
           colour: chosenColour, 
-          image: productWithVariant.image_url
+          image: productWithVariant.images?.[0]
         })
       });
 

@@ -58,13 +58,13 @@ function Footer() {
           </div>
         </div> */}
 
-        <div className="border-t border-stone-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-stone-500">
+        {/* <div className="border-t border-stone-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-stone-500"> */}
           <p>&copy; {year} My Website. All rights reserved.</p>
           {/* <div className="flex space-x-6 mt-4 md:mt-0">
              <Link to="/privacy" className="hover:text-stone-300">Privacy Policy</Link>
              <Link to="/terms" className="hover:text-stone-300">Terms of Service</Link>
           </div> */}
-        </div>
+        {/* </div> */}
 
       </div>
     </footer>

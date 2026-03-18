@@ -120,14 +120,15 @@ app.get('/api/products', async (req, res) => {
 
 app.post('/api/products', upload.array('productImages', 4), async (req, res) => {
     try {
-        const { name, price } = req.body; // Removed 'description' as it's not in your DB
+        const { name, price, backendUrl } = req.body;
         
         if (!req.files || req.files.length !== 4) {
             return res.status(400).json({ error: "Exactly 4 images are required" });
         }
 
-        // Create full URL for the image
-        const imageUrls = req.files.map(file => `http://localhost:5000/public/${file.filename}`);
+        // Create full URL for the image using the backend URL sent from frontend
+        const imageBaseUrl = backendUrl || `http://localhost:${port}`;
+        const imageUrls = req.files.map(file => `${imageBaseUrl}/public/${file.filename}`);
 
         console.log(imageUrls);
         // Inserting into your existing table structure

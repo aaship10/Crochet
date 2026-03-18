@@ -290,15 +290,17 @@ const AddProductForm = ({ onProductAdded }) => {
     if(!token) return alert("Unauthorized");
     
     setLoading(true);
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const formData = new FormData();
     formData.append('name', productData.name);
     formData.append('price', productData.price);
+    formData.append('backendUrl', backendUrl);
     files.forEach((file) => {
         if(file) formData.append('productImages', file);
     });
 
     try {
-      await axios.post(`${import.meta.env.REACT_APP_API_URL}/api/products`, formData, {
+      await axios.post(`${backendUrl}/api/products`, formData, {
         headers: { 
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`
@@ -386,7 +388,7 @@ const ProductInventory = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.REACT_APP_API_URL}/api/products`);
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/products`);
       setProducts(res.data);
     } catch (err) {
       console.error("Error fetching products", err);
@@ -402,7 +404,7 @@ const ProductInventory = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
-      await axios.delete(`${import.meta.env.REACT_APP_API_URL}/api/products/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/products/${id}`, {
          headers: { Authorization: `Bearer ${token}` }
       });
       setProducts(products.filter(p => p.id !== id));

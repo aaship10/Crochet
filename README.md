@@ -1,8 +1,10 @@
 # ThreadedThings
 
-An e-commerce website for handmade crochet goods — fullstack app with a Vite + React frontend and a Node/Express backend.
+An e-commerce website for handmade crochet goods - fullstack app with a Vite + React frontend and a Node/Express backend.
 
-**Status:** Work in progress
+**Status:** Done
+
+**Deployed Link:** https://crochet-zeta.vercel.app/
 
 **Tech stack:**
 - Frontend: React, Vite, Tailwind CSS

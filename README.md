@@ -1,4 +1,4 @@
-# Crochet
+# ThreadedThings
 
 An e-commerce website for handmade crochet goods — fullstack app with a Vite + React frontend and a Node/Express backend.
 
@@ -55,7 +55,6 @@ Environment variables
 - Create a `.env` in `backend/` and set values used by the server. Typical keys:
   - `DATABASE_URL` — Postgres connection string
   - `JWT_SECRET` — secret for signing JWTs
-  - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — for Google OAuth
   - `PORT` — server port (optional)
 
 3) Frontend (development)
@@ -72,12 +71,3 @@ Build for production
 cd frontend
 npm run build
 ```
-
-Notes
-- The backend currently lists dependencies in `backend/package.json` (Express, pg, passport, jwt, bcrypt, multer, etc.). There is no automated test suite configured.
-- The frontend scripts are defined in `frontend/package.json` (`dev`, `build`, `preview`).
-
-Contributing
-------------
-- Open an issue to discuss large changes.
-- Send pull requests for bug fixes or features. Keep changes small and focused.

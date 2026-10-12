@@ -11,6 +11,7 @@ import Header from './pages/components/header'
 import  { AuthProvider } from './pages/AuthProvider'
 import Checkout from './pages/checkout'
 import AdminDashboard from './pages/AdminDashboard'
+import Chatbot from './pages/components/Chatbot'
 function App() {
   return (
     <AuthProvider>
@@ -26,6 +27,7 @@ function App() {
         <Route path='/checkout' element={<Checkout />} />
         <Route path='/adminDashboard' element={<AdminDashboard />} />
       </Routes>
+      <Chatbot />
     </AuthProvider>
   )
 }

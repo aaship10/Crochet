@@ -108,7 +108,7 @@ def authenticate(request: Request) -> dict:
         raise ApiError(403, "message", "Invalid or expired token")
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def root():
     return PlainTextResponse("Backend is running!")
 

@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../useAuth';
-import logo from '/logo.png';
+import logo from '/logo.png'
 function Header() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -94,13 +94,15 @@ function Header() {
 
 
     return (
-        <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-stone-100 shadow-sm font-sans">
-            <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-                
+        <header className="sticky top-0 z-50 w-full bg-[#F1ECFB] border-b border-stone-100 shadow-sm font-sans">
+            <div className="container mx-auto px-4 h-24 flex items-center justify-between">
+
                 <Link to="/" className="flex items-center gap-2 group">
-                    <img src={logo} className='h-14 w-40 rounded-md' />
+                    <div className="h-20 w-44 overflow-hidden bg-[#F1ECFB]">
+                        <img src={logo} alt="Threaded Things by VP" className='h-full w-full object-cover scale-[1.1]'/>
+                    </div>
                     {/* <span className="text-2xl font-serif font-bold text-stone-800 tracking-tight group-hover:text-orange-600 transition-colors">
-                        ThreadedThings<span className="text-orange-500">.</span>
+                        Crochet<span className="text-orange-500">.</span>
                     </span> */}
                 </Link>
 

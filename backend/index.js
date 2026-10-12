@@ -14,15 +14,25 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'public/'); 
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+// 1. Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+// 2. Replace your old diskStorage with CloudinaryStorage
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'crochet_products', // This creates a nice folder in your Cloudinary account
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'], // restrict file types if you want
+  },
+});
+
 const upload = multer({ storage: storage });
 
 app.use('/public', express.static(path.join(__dirname, 'public')));
@@ -71,7 +81,7 @@ app.post('/auth/register', async (req, res) => {
         res.json({message:"User registered!", user: result.rows[0]});
     }
     catch (err) {
-        console.error(err);
+        // console.error(err);
         if (err.code === '23505') {
             return res.status(409).json({ error: "Email already exists" });
         }
@@ -102,7 +112,7 @@ app.post('/auth/login', async (req, res) => {
             address: user.address
         } });
     } catch (err) {
-        console.error(err);
+        // console.error(err);
         res.status(500).send('Server Error');
     }
 });
@@ -113,25 +123,21 @@ app.get('/api/products', async (req, res) => {
     const result = await pool.query('SELECT * FROM products');
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     res.status(500).send('Server Error');
   }
 });
 
 app.post('/api/products', upload.array('productImages', 4), async (req, res) => {
     try {
-        const { name, price, backendUrl } = req.body;
+        const { name, price } = req.body; 
         
         if (!req.files || req.files.length !== 4) {
             return res.status(400).json({ error: "Exactly 4 images are required" });
         }
 
-        // Create full URL for the image using the backend URL sent from frontend
-        const imageBaseUrl = backendUrl || `http://localhost:${port}`;
-        const imageUrls = req.files.map(file => `${imageBaseUrl}/public/${file.filename}`);
+        const imageUrls = req.files.map(file => file.path);
 
-        console.log(imageUrls);
-        // Inserting into your existing table structure
         const result = await pool.query(
             'INSERT INTO products (name, price, images) VALUES ($1, $2, $3) RETURNING *',
             [name, price, imageUrls]
@@ -139,7 +145,7 @@ app.post('/api/products', upload.array('productImages', 4), async (req, res) => 
         
         res.json(result.rows[0]);
     } catch (err) {
-        console.error("Error adding product:", err);
+        // console.error("Error adding product:", err);
         res.status(500).send('Server Error');
     }
 });
@@ -156,7 +162,7 @@ app.delete('/api/products/:id', async (req, res) => {
         
         res.json({ message: "Product deleted successfully" });
     } catch (err) {
-        console.error("Error deleting product:", err);
+        // console.error("Error deleting product:", err);
         // This handles cases where the product is in a cart and cannot be deleted immediately
         res.status(500).json({ error: "Could not delete product (it might be in a customer's cart)" });
     }
@@ -168,7 +174,7 @@ app.delete('/api/products/:id', async (req, res) => {
 app.post('/api/cart', authenticateToken, async(req, res) => {
     const { product_id, name, price, colour, image } = req.body;
     const userId = req.user.id;
-    console.log('product added to cart', [product_id, name, price, colour, image]);
+    // console.log('product added to cart', [product_id, name, price, colour, image]);
 
     try {
         const existing = await pool.query('SELECT * FROM cart WHERE (product_id = $1 AND colour = $2 AND user_id = $3)', [product_id, colour, userId]);
@@ -177,10 +183,10 @@ app.post('/api/cart', authenticateToken, async(req, res) => {
         } else {
             await pool.query('INSERT INTO cart (product_id, product_name, price, colour, image, user_id, "dateForAddToCart" ) VALUES  ($1, $2, $3, $4, $5, $6, NOW())', [product_id, name, price, colour, image, userId]);
         }
-        console.log('product added to cart', [product_id, name, price, colour, image]);
+        // console.log('product added to cart', [product_id, name, price, colour, image]);
         res.json({message: 'Added to cart successfully'});
     } catch(err) {
-        console.error(err);
+        // console.error(err);
         res.status(500).json({error: 'Database error'});
     }
 });
@@ -215,7 +221,7 @@ app.put('/api/cart/distance', authenticateToken, async (req, res) => {
 
         res.json({ message: "Delivery distance updated successfully" });
     } catch (err) {
-        console.error("Error updating distance:", err);
+        // console.error("Error updating distance:", err);
         res.status(500).json({ error: "Database error" });
     }
 });
@@ -244,7 +250,7 @@ app.put('/api/cart/:id', authenticateToken, async (req, res) => {
 
         res.json({ message: "Quantity updated", item: result.rows[0] });
     } catch (err) {
-        console.error("Error updating cart quantity:", err);
+        // console.error("Error updating cart quantity:", err);
         res.status(500).json({ error: "Database error" });
     }
 });
@@ -266,7 +272,7 @@ app.delete('/api/cart/:id', authenticateToken, async (req, res) => {
 
         res.json({ message: "Item removed from cart", item: result.rows[0] });
     } catch (err) {
-        console.error("Error deleting cart item:", err);
+        // console.error("Error deleting cart item:", err);
         res.status(500).json({ error: "Database error" });
     }
 });
@@ -275,7 +281,7 @@ app.post('/api/cart/buy', authenticateToken, async(req, res) => {
     const userId = req.user.id;
     const { transactionId } = req.body; 
 
-    console.log("Processing buy for User:", userId, "Transaction ID:", transactionId);
+    // console.log("Processing buy for User:", userId, "Transaction ID:", transactionId);
 
     try {
         await pool.query(
@@ -292,7 +298,7 @@ app.post('/api/cart/buy', authenticateToken, async(req, res) => {
         return res.status(200).json({message: 'Order placed successfully!'});
     }
     catch (err) {
-        console.error("Buy API Error:", err);
+        // console.error("Buy API Error:", err);
         res.status(500).json({error: 'Database error'});
     }
 });
@@ -321,7 +327,7 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
         const result = await pool.query(query, [userId]);
         res.json(result.rows);
     } catch (err) {
-        console.error('Error fetching user orders:', err);
+        // console.error('Error fetching user orders:', err);
         res.status(500).json({ message: 'Database error' });
     }
 });
@@ -354,7 +360,7 @@ app.get('/api/admin/orders', async (req, res) => {
         const { rows } = await pool.query(query);
         res.json(rows);
     } catch (err) {
-        console.error("Error fetching admin orders:", err);
+        // console.error("Error fetching admin orders:", err);
         res.status(500).json({ message: 'Server Error' });
     }
 });
@@ -383,11 +389,11 @@ app.put('/api/admin/orders/:id/status', async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (err) {
-        console.error("Error updating status:", err);
+        // console.error("Error updating status:", err);
         res.status(500).json({ error: "Database error" });
     }
 });
 
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+//   console.log(`Server running on http://localhost:${port}`);
 });

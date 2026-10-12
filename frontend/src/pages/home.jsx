@@ -43,7 +43,7 @@ function Home() {
               <img 
                 src={img1} 
                 alt="Cozy Crochet Item" 
-                className="w-full h-auto max-h-[500px] object-cover rounded-2xl shadow-2xl rotate-0 hover:rotate-2 transition-transform duration-500" 
+                className="w-full h-auto max-h-[500px] object-cover rounded-2xl shadow-2xl rotate-0 transition-transform duration-500" 
               />
             </div>
           </div>

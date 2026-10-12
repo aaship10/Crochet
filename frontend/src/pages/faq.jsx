@@ -2,6 +2,17 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Footer from './components/footer';
 
+const InstaLink = () => (
+  <a
+    href="https://www.instagram.com/threaded_.things/"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="font-semibold text-orange-600 underline underline-offset-2 hover:text-orange-500"
+  >
+    @threaded_.things
+  </a>
+);
+
 function Faq() {
   const [openIndex, setOpenIndex] = useState(null);
 
@@ -16,7 +27,7 @@ function Faq() {
     },
     {
       question: "Do you offer custom crochet orders?",
-      answer: "Yes, we love bringing your ideas to life! Whether it's a specific color palette or a custom keychain. Feel free to reach out to us with your ideas by messaging us on +919850881616."
+      answer: <>Yes, we love bringing your ideas to life! Whether it's a specific color palette or a custom keychain. Just send us a DM on Instagram at <InstaLink /> with your ideas, and we'll happily work with you to create something made just for you.</>
     },
     {
       question: "What is your return policy?",
@@ -36,7 +47,7 @@ function Faq() {
     },
     {
       question: "How can I contact customer support?",
-      answer: "You can reach our customer support team by messaging us on the number +919850881616. We aim to respond within 24-48 hours."
+      answer: <>We'd love to hear from you! Send us a DM on Instagram at <InstaLink /> and we'll get back to you within 24-48 hours.</>
     },
     {
       question: "How will I know the status of my order?",

@@ -10,6 +10,7 @@ import img6 from "/green.JPG";
 function ColourModal({ onClose, onSelect }) {
     
     const colours = [
+        { id: 0, name: "Default", hex: null, image: null },
         { id: 1, name: "Light Purple", hex: "#8E4DFF", image: img1 },
         { id: 2, name: "Ocean Blue", hex: "#005A73", image: img3 },
         { id: 3, name: "Forest Green", hex: "#34D98A", image: img6 },
@@ -79,15 +80,24 @@ function ColourModal({ onClose, onSelect }) {
                                     )}
 
                                     <div className="relative w-full aspect-square mb-3 rounded-lg overflow-hidden">
-                                        <img
-                                            src={colour.image}
-                                            alt={colour.name}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                        />
-                                        <div 
-                                            className="absolute bottom-2 left-2 w-6 h-6 rounded-full border-2 border-white shadow-md"
-                                            style={{ backgroundColor: colour.hex }}
-                                        ></div>
+                                        {colour.image ? (
+                                            <>
+                                                <img
+                                                    src={colour.image}
+                                                    alt={colour.name}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                                <div
+                                                    className="absolute bottom-2 left-2 w-6 h-6 rounded-full border-2 border-white shadow-md"
+                                                    style={{ backgroundColor: colour.hex }}
+                                                ></div>
+                                            </>
+                                        ) : (
+                                            <div className="w-full h-full bg-stone-100 flex flex-col items-center justify-center text-stone-500 text-center px-2">
+                                                <span className="font-serif font-bold text-lg">Default</span>
+                                                <span className="text-xs mt-1">As shown in the pictures</span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <span className={`font-medium text-sm ${isSelected ? 'text-orange-900' : 'text-stone-700'}`}>
